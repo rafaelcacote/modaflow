@@ -7,6 +7,7 @@ use App\Http\Requests\EmpresaUpdateRequest;
 use App\Models\Empresa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,7 +60,24 @@ class EmpresaController extends Controller
      */
     public function store(EmpresaStoreRequest $request): RedirectResponse
     {
-        Empresa::create($request->validated());
+        \Log::info('Store request data:', $request->all());
+        \Log::info('Has file logo:', [$request->hasFile('logo')]);
+        if ($request->hasFile('logo')) {
+            \Log::info('Logo file info:', [
+                'name' => $request->file('logo')->getClientOriginalName(),
+                'mime' => $request->file('logo')->getMimeType(),
+                'size' => $request->file('logo')->getSize(),
+            ]);
+        }
+        
+        $data = $request->validated();
+        
+        // Processa o upload da imagem se existir
+        if ($request->hasFile('logo')) {
+            $data['logo_path'] = $request->file('logo')->store('empresas/logos', 'public');
+        }
+
+        Empresa::create($data);
 
         return to_route('empresas.index')
             ->with('success', 'Empresa cadastrada com sucesso!');
@@ -90,9 +108,21 @@ class EmpresaController extends Controller
      */
     public function update(EmpresaUpdateRequest $request, Empresa $empresa): RedirectResponse
     {
-        $empresa->update($request->validated());
+        $data = $request->validated();
+        
+        // Processa o upload da imagem se existir
+        if ($request->hasFile('logo')) {
+            // Remove a imagem anterior se existir
+            if ($empresa->logo_path && Storage::disk('public')->exists($empresa->logo_path)) {
+                Storage::disk('public')->delete($empresa->logo_path);
+            }
+            
+            $data['logo_path'] = $request->file('logo')->store('empresas/logos', 'public');
+        }
 
-        return to_route('empresas.edit', $empresa)
+        $empresa->update($data);
+
+        return to_route('empresas.index')
             ->with('success', 'Empresa atualizada com sucesso!');
     }
 
@@ -101,7 +131,15 @@ class EmpresaController extends Controller
      */
     public function destroy(Empresa $empresa): RedirectResponse
     {
+        // Armazena o caminho da logo antes de excluir a empresa
+        $logoPath = $empresa->logo_path;
+        
         $empresa->delete();
+        
+        // Remove a imagem após excluir a empresa
+        if ($logoPath && Storage::disk('public')->exists($logoPath)) {
+            Storage::disk('public')->delete($logoPath);
+        }
 
         return to_route('empresas.index')
             ->with('success', 'Empresa excluída com sucesso!');

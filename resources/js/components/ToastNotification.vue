@@ -7,7 +7,7 @@ import {
     Info,
     X,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 
 interface Props {
     toast: Toast;
@@ -15,6 +15,38 @@ interface Props {
 
 const props = defineProps<Props>();
 const { remove } = useToast();
+
+// Progress bar
+const progress = ref(100);
+const interval = ref<number | null>(null);
+const duration = props.toast.duration || 5000;
+
+onMounted(() => {
+    if (duration > 0) {
+        const startTime = Date.now();
+        const endTime = startTime + duration;
+        
+        interval.value = window.setInterval(() => {
+            const now = Date.now();
+            const remaining = Math.max(0, endTime - now);
+            progress.value = (remaining / duration) * 100;
+            
+            if (remaining <= 0) {
+                if (interval.value) {
+                    clearInterval(interval.value);
+                }
+                // Remover o toast quando a barra chegar a zero
+                remove(props.toast.id);
+            }
+        }, 10);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (interval.value) {
+        clearInterval(interval.value);
+    }
+});
 
 const icon = computed(() => {
     switch (props.toast.type) {
@@ -98,6 +130,25 @@ const iconColorClasses = computed(() => {
                     </button>
                 </div>
             </div>
+        </div>
+        <!-- Progress bar -->
+        <div 
+            v-if="duration > 0" 
+            class="h-1 w-full bg-gray-200 dark:bg-gray-700"
+        >
+            <div 
+                :class="[
+                    'h-full transition-all duration-100 ease-linear',
+                    {
+                        'bg-green-500 dark:bg-green-400': toast.type === 'success',
+                        'bg-red-500 dark:bg-red-400': toast.type === 'error',
+                        'bg-yellow-500 dark:bg-yellow-400': toast.type === 'warning',
+                        'bg-blue-500 dark:bg-blue-400': toast.type === 'info',
+                        'bg-gray-500 dark:bg-gray-400': !toast.type
+                    }
+                ]"
+                :style="{ width: `${progress}%` }"
+            ></div>
         </div>
     </div>
 </template>

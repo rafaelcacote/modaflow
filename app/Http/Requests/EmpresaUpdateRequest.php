@@ -32,11 +32,12 @@ class EmpresaUpdateRequest extends FormRequest
                 'string',
                 'max:18',
                 'regex:/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/',
-                Rule::unique('multitenancy.empresas', 'cnpj')
+                Rule::unique('empresas', 'cnpj')
                     ->ignore($empresaId)
                     ->whereNull('deleted_at'),
             ],
             'email' => ['required', 'email', 'max:255'],
+            'logo' => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
             'telefone' => ['nullable', 'string', 'max:20'],
             'ativo' => ['boolean'],
             'data_adesao' => ['nullable', 'date'],
@@ -61,6 +62,9 @@ class EmpresaUpdateRequest extends FormRequest
             'email.required' => 'O email é obrigatório.',
             'email.email' => 'O email deve ser um endereço válido.',
             'data_expiracao.after' => 'A data de expiração deve ser posterior à data de adesão.',
+            'logo.file' => 'O logo deve ser um arquivo.',
+            'logo.mimes' => 'A logo deve ser um arquivo do tipo: jpeg, png, jpg, gif ou webp.',
+            'logo.max' => 'A logo não pode ser maior que 2MB.',
         ];
     }
 }

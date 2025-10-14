@@ -9,6 +9,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Empresa extends Model
 {
     use HasFactory, SoftDeletes;
+    
+    /**
+     * Get the logo URL attribute.
+     *
+     * @return string|null
+     */
+    public function getLogoUrlAttribute()
+    {
+        return $this->logo_path ? asset('storage/' . $this->logo_path) : null;
+    }
 
     /**
      * The connection name for the model.
@@ -35,6 +45,7 @@ class Empresa extends Model
         'nome_fantasia',
         'cnpj',
         'email',
+        'logo_path',
         'telefone',
         'ativo',
         'data_adesao',
@@ -47,6 +58,13 @@ class Empresa extends Model
      * @var list<string>
      */
     protected $hidden = [];
+    
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['logo_url'];
 
     /**
      * Get the attributes that should be cast.
