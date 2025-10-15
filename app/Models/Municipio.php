@@ -14,7 +14,7 @@ class Municipio extends Model
      *
      * @var string
      */
-    protected $table = 'municipios';
+    protected $table = 'shared.municipios';
 
     /**
      * The attributes that are mass assignable.
@@ -24,7 +24,6 @@ class Municipio extends Model
     protected $fillable = [
         'nome',
         'estado_id',
-        'ibge_codigo',
     ];
 
     /**

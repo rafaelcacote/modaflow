@@ -115,7 +115,7 @@ class EmpresaController extends Controller
      */
     public function show(Empresa $empresa): Response
     {
-        $empresa->load('endereco');
+        $empresa->load(['endereco', 'lojas']);
         
         return Inertia::render('empresas/Show', [
             'empresa' => $empresa,
@@ -140,6 +140,11 @@ class EmpresaController extends Controller
     public function update(EmpresaUpdateRequest $request, Empresa $empresa): RedirectResponse
     {
         $data = $request->validated();
+        
+        // Converte o campo ativo de integer para boolean
+        if (isset($data['ativo'])) {
+            $data['ativo'] = (bool) $data['ativo'];
+        }
         
         DB::beginTransaction();
         try {

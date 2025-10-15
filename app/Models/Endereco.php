@@ -15,7 +15,7 @@ class Endereco extends Model
      *
      * @var string
      */
-    protected $table = 'enderecos';
+    protected $table = 'shared.enderecos';
 
     /**
      * The attributes that are mass assignable.

@@ -123,62 +123,66 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
             </CardDescription>
         </CardHeader>
         <CardContent class="space-y-6">
-            <!-- Razão Social -->
-            <div class="space-y-2">
-                <Label for="razao_social">
-                    Razão Social
-                </Label>
-                <Input
-                    v-if="form"
-                    id="razao_social"
-                    name="razao_social"
-                    v-model="form.razao_social"
-                    :class="{ 'border-red-500 focus-visible:ring-red-500': errors.razao_social }"
-                    placeholder="Ex: Empresa LTDA"
-                    :disabled="processing"
-                    autocomplete="organization"
-                />
-                <Input
-                    v-else
-                    id="razao_social"
-                    name="razao_social"
-                    :default-value="empresa?.razao_social"
-                    :class="{ 'border-red-500 focus-visible:ring-red-500': errors.razao_social }"
-                    placeholder="Ex: Empresa LTDA"
-                    :disabled="processing"
-                    autocomplete="organization"
-                />
-                <InputError :message="errors.razao_social || (!isCreate && !empresa?.razao_social ? 'A razão social é obrigatória.' : '')" />
-            </div>
-
-            <!-- Nome Fantasia -->
-            <div class="space-y-2">
-                <Label for="nome_fantasia">
-                    Nome Fantasia
-                </Label>
-                <Input
-                    v-if="form"
-                    id="nome_fantasia"
-                    name="nome_fantasia"
-                    v-model="form.nome_fantasia"
-                    :class="{ 'border-red-500 focus-visible:ring-red-500': errors.nome_fantasia }"
-                    placeholder="Ex: Empresa"
-                    :disabled="processing"
-                />
-                <Input
-                    v-else
-                    id="nome_fantasia"
-                    name="nome_fantasia"
-                    :default-value="empresa?.nome_fantasia"
-                    :class="{ 'border-red-500 focus-visible:ring-red-500': errors.nome_fantasia }"
-                    placeholder="Ex: Empresa"
-                    :disabled="processing"
-                />
-                <InputError :message="errors.nome_fantasia || (!isCreate && !empresa?.nome_fantasia ? 'O nome fantasia é obrigatório.' : '')" />
-            </div>
-
-            <!-- CNPJ e Email -->
+            <!-- Linha 1: Razão Social e Nome Fantasia -->
             <div class="grid gap-4 md:grid-cols-2">
+                <!-- Razão Social -->
+                <div class="space-y-2">
+                    <Label for="razao_social">
+                        Razão Social
+                    </Label>
+                    <Input
+                        v-if="form"
+                        id="razao_social"
+                        name="razao_social"
+                        v-model="form.razao_social"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.razao_social }"
+                        placeholder="Ex: Empresa LTDA"
+                        :disabled="processing"
+                        autocomplete="organization"
+                    />
+                    <Input
+                        v-else
+                        id="razao_social"
+                        name="razao_social"
+                        :default-value="empresa?.razao_social"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.razao_social }"
+                        placeholder="Ex: Empresa LTDA"
+                        :disabled="processing"
+                        autocomplete="organization"
+                    />
+                    <InputError :message="errors.razao_social || (!isCreate && !empresa?.razao_social ? 'A razão social é obrigatória.' : '')" />
+                </div>
+
+                <!-- Nome Fantasia -->
+                <div class="space-y-2">
+                    <Label for="nome_fantasia">
+                        Nome Fantasia
+                    </Label>
+                    <Input
+                        v-if="form"
+                        id="nome_fantasia"
+                        name="nome_fantasia"
+                        v-model="form.nome_fantasia"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.nome_fantasia }"
+                        placeholder="Ex: Empresa"
+                        :disabled="processing"
+                    />
+                    <Input
+                        v-else
+                        id="nome_fantasia"
+                        name="nome_fantasia"
+                        :default-value="empresa?.nome_fantasia"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.nome_fantasia }"
+                        placeholder="Ex: Empresa"
+                        :disabled="processing"
+                    />
+                    <InputError :message="errors.nome_fantasia || (!isCreate && !empresa?.nome_fantasia ? 'O nome fantasia é obrigatório.' : '')" />
+                </div>
+            </div>
+
+            <!-- Linha 2: CNPJ, Email, Telefone, Data Adesão, Data Expiração -->
+            <div class="grid gap-4 md:grid-cols-5">
+                <!-- CNPJ -->
                 <div class="space-y-2">
                     <Label for="cnpj">CNPJ</Label>
                     <Input
@@ -187,6 +191,7 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                         name="cnpj"
                         v-model="form.cnpj"
                         @input="form.cnpj = formatCNPJ($event.target.value)"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.cnpj }"
                         placeholder="00.000.000/0000-00"
                         maxlength="18"
                         :disabled="processing"
@@ -197,6 +202,7 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                         name="cnpj"
                         v-model="cnpjInput"
                         @input="handleCNPJInput"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.cnpj }"
                         placeholder="00.000.000/0000-00"
                         maxlength="18"
                         :disabled="processing"
@@ -204,6 +210,7 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                     <InputError :message="errors.cnpj" />
                 </div>
 
+                <!-- Email -->
                 <div class="space-y-2">
                     <Label for="email">Email</Label>
                     <Input
@@ -230,66 +237,38 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                     />
                     <InputError :message="errors.email || (!isCreate && !empresa?.email ? 'O email é obrigatório.' : '')" />
                 </div>
-                
+
+                <!-- Telefone -->
                 <div class="space-y-2">
-                    <Label for="logo">Logo da Empresa</Label>
-                    <div class="flex items-center gap-4">
-                        <Input
-                            id="logo"
-                            name="logo"
-                            type="file"
-                            accept="image/png, image/jpeg, image/jpg, image/gif"
-                            @change="handleLogoUpload"
-                            :class="{ 'border-red-500 focus-visible:ring-red-500': errors.logo }"
-                            :disabled="processing"
-                        />
-                    </div>
-                    <InputError :message="errors.logo" />
-                    
-                    <div v-if="logoPreview" class="mt-2">
-                        <p class="text-sm text-muted-foreground mb-1">Pré-visualização:</p>
-                        <div class="w-24 h-24 rounded border overflow-hidden flex items-center justify-center bg-gray-50">
-                            <img 
-                                :src="logoPreview" 
-                                alt="Logo da empresa" 
-                                class="max-w-full max-h-full object-contain"
-                                @error="() => { logoPreview = '' }"
-                            />
-                        </div>
-                    </div>
+                    <Label for="telefone">Telefone</Label>
+                    <Input
+                        v-if="form"
+                        id="telefone"
+                        name="telefone"
+                        v-model="form.telefone"
+                        @input="form.telefone = formatPhone($event.target.value)"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.telefone }"
+                        placeholder="(00) 00000-0000"
+                        maxlength="15"
+                        :disabled="processing"
+                        autocomplete="tel"
+                    />
+                    <Input
+                        v-else
+                        id="telefone"
+                        name="telefone"
+                        v-model="telefoneInput"
+                        @input="handlePhoneInput"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.telefone }"
+                        placeholder="(00) 00000-0000"
+                        maxlength="15"
+                        :disabled="processing"
+                        autocomplete="tel"
+                    />
+                    <InputError :message="errors.telefone" />
                 </div>
-            </div>
 
-            <!-- Telefone -->
-            <div class="space-y-2">
-                <Label for="telefone">Telefone</Label>
-                <Input
-                    v-if="form"
-                    id="telefone"
-                    name="telefone"
-                    v-model="form.telefone"
-                    @input="form.telefone = formatPhone($event.target.value)"
-                    placeholder="(00) 00000-0000"
-                    maxlength="15"
-                    :disabled="processing"
-                    autocomplete="tel"
-                />
-                <Input
-                    v-else
-                    id="telefone"
-                    name="telefone"
-                    v-model="telefoneInput"
-                    @input="handlePhoneInput"
-                    placeholder="(00) 00000-0000"
-                    maxlength="15"
-                    :disabled="processing"
-                    autocomplete="tel"
-                />
-                <InputError :message="errors.telefone" />
-            </div>
-
-            <!-- Datas -->
-            <div class="grid gap-4 md:grid-cols-2">
+                <!-- Data Adesão -->
                 <div class="space-y-2">
                     <Label for="data_adesao">Data de Adesão</Label>
                     <Input
@@ -298,6 +277,7 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                         name="data_adesao"
                         type="date"
                         v-model="form.data_adesao"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.data_adesao }"
                         :disabled="processing"
                     />
                     <Input
@@ -306,11 +286,13 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                         name="data_adesao"
                         type="date"
                         :default-value="isCreate ? defaultDataAdesao : empresa?.data_adesao?.split('T')[0]"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.data_adesao }"
                         :disabled="processing"
                     />
-                    <InputError :message="errors.data_adesao" />
+                    <InputError :message="errors.data_adesao || (!isCreate && !empresa?.data_adesao ? 'A data de adesão é obrigatória.' : '')" />
                 </div>
 
+                <!-- Data Expiração -->
                 <div class="space-y-2">
                     <Label for="data_expiracao">Data de Expiração</Label>
                     <Input
@@ -319,6 +301,7 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                         name="data_expiracao"
                         type="date"
                         v-model="form.data_expiracao"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.data_expiracao }"
                         :disabled="processing"
                     />
                     <Input
@@ -327,13 +310,43 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                         name="data_expiracao"
                         type="date"
                         :default-value="empresa?.data_expiracao?.split('T')[0]"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.data_expiracao }"
                         :disabled="processing"
                     />
                     <InputError :message="errors.data_expiracao" />
                 </div>
             </div>
 
-            <!-- Ativo -->
+            <!-- Linha 3: Logo Empresa -->
+            <div class="space-y-2">
+                <Label for="logo">Logo da Empresa</Label>
+                <div class="flex items-center gap-4">
+                    <Input
+                        id="logo"
+                        name="logo"
+                        type="file"
+                        accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+                        @change="handleLogoUpload"
+                        :class="{ 'border-red-500 focus-visible:ring-red-500': errors.logo }"
+                        :disabled="processing"
+                    />
+                </div>
+                <InputError :message="errors.logo" />
+                
+                <div v-if="logoPreview" class="mt-2">
+                    <p class="text-sm text-muted-foreground mb-1">Pré-visualização:</p>
+                    <div class="w-24 h-24 rounded border overflow-hidden flex items-center justify-center bg-gray-50">
+                        <img 
+                            :src="logoPreview" 
+                            alt="Logo da empresa" 
+                            class="max-w-full max-h-full object-contain"
+                            @error="() => { logoPreview = '' }"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Linha 4: Status da Empresa -->
             <div class="flex items-center space-x-3">
                 <div class="flex flex-col space-y-2">
                     <Label for="ativo">Status da Empresa</Label>
@@ -355,6 +368,7 @@ const defaultDataAdesao = new Date().toISOString().split('T')[0];
                         </Label>
                         <input v-if="!form" type="hidden" name="ativo" :value="ativo ? 1 : 0" />
                     </div>
+                    <InputError :message="errors.ativo" />
                 </div>
             </div>
         </CardContent>

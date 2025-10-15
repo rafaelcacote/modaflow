@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MapPin } from 'lucide-vue-next';
-import axios from 'axios';
+import axios from '@/lib/axios';
 
 interface Estado {
     id: number;

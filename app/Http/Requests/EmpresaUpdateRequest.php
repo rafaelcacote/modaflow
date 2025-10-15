@@ -39,8 +39,8 @@ class EmpresaUpdateRequest extends FormRequest
             'email' => ['required', 'email', 'max:255'],
             'logo' => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
             'telefone' => ['nullable', 'string', 'max:20'],
-            'ativo' => ['boolean'],
-            'data_adesao' => ['nullable', 'date'],
+            'ativo' => ['nullable', 'integer', 'in:0,1'],
+            'data_adesao' => ['required', 'date'],
             'data_expiracao' => ['nullable', 'date', 'after:data_adesao'],
             
             // Endereço

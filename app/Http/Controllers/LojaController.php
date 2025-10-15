@@ -69,19 +69,12 @@ class LojaController extends Controller
         
         DB::beginTransaction();
         try {
-            // Processa o endereço se existir
-            $enderecoId = null;
-            if (!empty($data['endereco']) && !empty($data['endereco']['endereco'])) {
-                $endereco = Endereco::create($data['endereco']);
-                $enderecoId = $endereco->id;
-            }
-            
-            // Remove dados de endereço do array principal
+            // Remove dados de endereço do array principal se existirem
+            // (os campos de endereço já estão diretamente na tabela lojas)
             unset($data['endereco']);
             
-            // Adiciona empresa_id e endereco_id
+            // Adiciona empresa_id
             $data['empresa_id'] = $empresa->id;
-            $data['endereco_id'] = $enderecoId;
             
             Loja::create($data);
             
@@ -107,8 +100,6 @@ class LojaController extends Controller
         // Verifica se a loja pertence à empresa
         abort_if($loja->empresa_id !== $empresa->id, 404);
         
-        $loja->load('endereco');
-        
         return Inertia::render('lojas/Show', [
             'empresa' => $empresa,
             'loja' => $loja,
@@ -122,8 +113,6 @@ class LojaController extends Controller
     {
         // Verifica se a loja pertence à empresa
         abort_if($loja->empresa_id !== $empresa->id, 404);
-        
-        $loja->load('endereco');
         
         return Inertia::render('lojas/Edit', [
             'empresa' => $empresa,
@@ -143,21 +132,8 @@ class LojaController extends Controller
         
         DB::beginTransaction();
         try {
-            // Processa o endereço
-            if (!empty($data['endereco'])) {
-                if ($loja->endereco_id) {
-                    // Atualiza endereço existente
-                    $loja->endereco->update($data['endereco']);
-                } else {
-                    // Cria novo endereço se houver dados
-                    if (!empty($data['endereco']['endereco'])) {
-                        $endereco = Endereco::create($data['endereco']);
-                        $data['endereco_id'] = $endereco->id;
-                    }
-                }
-            }
-            
-            // Remove dados de endereço do array principal
+            // Remove dados de endereço do array principal se existirem
+            // (os campos de endereço já estão diretamente na tabela lojas)
             unset($data['endereco']);
             
             $loja->update($data);

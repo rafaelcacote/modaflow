@@ -14,7 +14,7 @@ class Estado extends Model
      *
      * @var string
      */
-    protected $table = 'estados';
+    protected $table = 'shared.estados';
 
     /**
      * The attributes that are mass assignable.

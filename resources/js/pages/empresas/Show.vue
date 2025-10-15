@@ -6,7 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pencil, ArrowLeft, MapPin, Phone, Mail, Calendar, Building2, FileText } from 'lucide-vue-next';
+import { Pencil, ArrowLeft, MapPin, Phone, Mail, Calendar, Building2, FileText, Store, Plus } from 'lucide-vue-next';
 import type { BreadcrumbItem } from '@/types';
 
 interface Endereco {
@@ -18,6 +18,26 @@ interface Endereco {
     municipio_id: number;
     cep: string | null;
     referencia: string | null;
+}
+
+interface Loja {
+    id: number;
+    empresa_id: number;
+    uuid: string;
+    nome: string;
+    cnpj: string | null;
+    telefone: string | null;
+    email: string | null;
+    cep: string | null;
+    logradouro: string | null;
+    numero: string | null;
+    complemento: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    estado: string | null;
+    ativo: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 interface Empresa {
@@ -34,6 +54,7 @@ interface Empresa {
     data_adesao: string;
     data_expiracao: string | null;
     endereco?: Endereco | null;
+    lojas?: Loja[];
     created_at: string;
     updated_at: string;
 }
@@ -73,6 +94,22 @@ const formatEndereco = (endereco: Endereco | null | undefined) => {
     if (endereco.cep) enderecoCompleto += ` - CEP: ${endereco.cep}`;
     
     return enderecoCompleto || 'Endereço incompleto';
+};
+
+const formatEnderecoLoja = (loja: Loja) => {
+    let enderecoCompleto = '';
+    
+    if (loja.logradouro) {
+        enderecoCompleto = loja.logradouro;
+        if (loja.numero) enderecoCompleto += `, ${loja.numero}`;
+        if (loja.complemento) enderecoCompleto += ` - ${loja.complemento}`;
+        if (loja.bairro) enderecoCompleto += ` - ${loja.bairro}`;
+        if (loja.cidade) enderecoCompleto += ` - ${loja.cidade}`;
+        if (loja.estado) enderecoCompleto += `/${loja.estado}`;
+        if (loja.cep) enderecoCompleto += ` - CEP: ${loja.cep}`;
+    }
+    
+    return enderecoCompleto || 'Endereço não cadastrado';
 };
 </script>
 
@@ -245,6 +282,102 @@ const formatEndereco = (endereco: Endereco | null | undefined) => {
                             <p class="text-sm font-medium text-muted-foreground">Cadastrado em</p>
                             <p class="text-base text-foreground">{{ formatDate(empresa.created_at) }}</p>
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Lojas da Empresa -->
+            <Card class="border-border shadow-sm">
+                <CardHeader class="space-y-1">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <CardTitle class="flex items-center gap-2">
+                                <Store class="h-5 w-5" />
+                                Lojas da Empresa
+                            </CardTitle>
+                            <CardDescription>
+                                Lista de todas as lojas cadastradas para esta empresa
+                            </CardDescription>
+                        </div>
+                        <Link :href="`/empresas/${empresa.id}/lojas`">
+                            <Button variant="outline" size="sm" class="gap-2">
+                                <Plus class="h-4 w-4" />
+                                Nova Loja
+                            </Button>
+                        </Link>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div v-if="empresa.lojas && empresa.lojas.length > 0" class="space-y-4">
+                        <div 
+                            v-for="loja in empresa.lojas" 
+                            :key="loja.id"
+                            class="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                        >
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <h3 class="text-lg font-semibold text-foreground">{{ loja.nome }}</h3>
+                                        <Badge
+                                            :variant="loja.ativo ? 'default' : 'secondary'"
+                                            class="text-xs"
+                                        >
+                                            {{ loja.ativo ? 'Ativa' : 'Inativa' }}
+                                        </Badge>
+                                    </div>
+                                    
+                                    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                        <div v-if="loja.cnpj" class="flex items-center gap-2">
+                                            <FileText class="h-4 w-4 text-muted-foreground" />
+                                            <span class="text-sm text-muted-foreground">CNPJ:</span>
+                                            <span class="text-sm text-foreground">{{ loja.cnpj }}</span>
+                                        </div>
+                                        
+                                        <div v-if="loja.email" class="flex items-center gap-2">
+                                            <Mail class="h-4 w-4 text-muted-foreground" />
+                                            <span class="text-sm text-muted-foreground">Email:</span>
+                                            <span class="text-sm text-foreground">{{ loja.email }}</span>
+                                        </div>
+                                        
+                                        <div v-if="loja.telefone" class="flex items-center gap-2">
+                                            <Phone class="h-4 w-4 text-muted-foreground" />
+                                            <span class="text-sm text-muted-foreground">Telefone:</span>
+                                            <span class="text-sm text-foreground">{{ loja.telefone }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-if="formatEnderecoLoja(loja) !== 'Endereço não cadastrado'" class="mt-3 flex items-start gap-2">
+                                        <MapPin class="h-4 w-4 text-muted-foreground mt-0.5" />
+                                        <div>
+                                            <span class="text-sm text-muted-foreground">Endereço:</span>
+                                            <p class="text-sm text-foreground">{{ formatEnderecoLoja(loja) }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center gap-2 ml-4">
+                                    <Link :href="`/empresas/${empresa.id}/lojas/${loja.id}`">
+                                        <Button variant="ghost" size="sm">
+                                            Ver Detalhes
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-else class="text-center py-8">
+                        <Store class="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                        <h3 class="text-lg font-medium text-muted-foreground mb-2">Nenhuma loja cadastrada</h3>
+                        <p class="text-sm text-muted-foreground mb-4">
+                            Esta empresa ainda não possui lojas cadastradas.
+                        </p>
+                        <Link :href="`/empresas/${empresa.id}/lojas/create`">
+                            <Button class="gap-2">
+                                <Plus class="h-4 w-4" />
+                                Cadastrar Primeira Loja
+                            </Button>
+                        </Link>
                     </div>
                 </CardContent>
             </Card>
