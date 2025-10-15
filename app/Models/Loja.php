@@ -6,33 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Empresa extends Model
+class Loja extends Model
 {
     use HasFactory, SoftDeletes;
-    
-    /**
-     * Get the logo URL attribute.
-     *
-     * @return string|null
-     */
-    public function getLogoUrlAttribute()
-    {
-        return $this->logo_path ? asset('storage/' . $this->logo_path) : null;
-    }
-
-    /**
-     * The connection name for the model.
-     *
-     * @var string
-     */
-    //protected $connection = 'pgsql';
 
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'empresas';
+    protected $table = 'lojas';
 
     /**
      * The attributes that are mass assignable.
@@ -40,17 +23,13 @@ class Empresa extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'uuid',
-        'razao_social',
-        'nome_fantasia',
+        'empresa_id',
+        'nome',
         'cnpj',
+        'telefone',
         'email',
         'endereco_id',
-        'logo_path',
-        'telefone',
         'ativo',
-        'data_adesao',
-        'data_expiracao',
     ];
 
     /**
@@ -59,13 +38,6 @@ class Empresa extends Model
      * @var list<string>
      */
     protected $hidden = [];
-    
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
-    protected $appends = ['logo_url'];
 
     /**
      * Get the attributes that should be cast.
@@ -75,10 +47,7 @@ class Empresa extends Model
     protected function casts(): array
     {
         return [
-            'uuid' => 'string',
             'ativo' => 'boolean',
-            'data_adesao' => 'datetime',
-            'data_expiracao' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'deleted_at' => 'datetime',
@@ -86,7 +55,7 @@ class Empresa extends Model
     }
 
     /**
-     * Scope para filtrar apenas empresas ativas.
+     * Scope para filtrar apenas lojas ativas.
      */
     public function scopeAtivas($query)
     {
@@ -94,7 +63,7 @@ class Empresa extends Model
     }
 
     /**
-     * Scope para filtrar apenas empresas inativas.
+     * Scope para filtrar apenas lojas inativas.
      */
     public function scopeInativas($query)
     {
@@ -102,18 +71,18 @@ class Empresa extends Model
     }
 
     /**
-     * Get the endereco that belongs to the empresa.
+     * Get the empresa that owns the loja.
+     */
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class);
+    }
+
+    /**
+     * Get the endereco that belongs to the loja.
      */
     public function endereco()
     {
         return $this->belongsTo(Endereco::class);
-    }
-
-    /**
-     * Get the lojas for the empresa.
-     */
-    public function lojas()
-    {
-        return $this->hasMany(Loja::class);
     }
 }

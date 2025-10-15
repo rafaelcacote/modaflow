@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\EmpresaStoreRequest;
 use App\Http\Requests\EmpresaUpdateRequest;
 use App\Models\Empresa;
+use App\Models\Endereco;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -72,15 +74,40 @@ class EmpresaController extends Controller
         
         $data = $request->validated();
         
-        // Processa o upload da imagem se existir
-        if ($request->hasFile('logo')) {
-            $data['logo_path'] = $request->file('logo')->store('empresas/logos', 'public');
+        DB::beginTransaction();
+        try {
+            // Processa o endereço se existir
+            $enderecoId = null;
+            if (!empty($data['endereco']) && !empty($data['endereco']['endereco'])) {
+                $endereco = Endereco::create($data['endereco']);
+                $enderecoId = $endereco->id;
+            }
+            
+            // Remove dados de endereço do array principal
+            unset($data['endereco']);
+            
+            // Adiciona o endereco_id
+            $data['endereco_id'] = $enderecoId;
+            
+            // Processa o upload da imagem se existir
+            if ($request->hasFile('logo')) {
+                $data['logo_path'] = $request->file('logo')->store('empresas/logos', 'public');
+            }
+
+            Empresa::create($data);
+            
+            DB::commit();
+
+            return to_route('empresas.index')
+                ->with('success', 'Empresa cadastrada com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Erro ao criar empresa:', ['error' => $e->getMessage()]);
+            
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Erro ao cadastrar empresa. Tente novamente.']);
         }
-
-        Empresa::create($data);
-
-        return to_route('empresas.index')
-            ->with('success', 'Empresa cadastrada com sucesso!');
     }
 
     /**
@@ -88,6 +115,8 @@ class EmpresaController extends Controller
      */
     public function show(Empresa $empresa): Response
     {
+        $empresa->load('endereco');
+        
         return Inertia::render('empresas/Show', [
             'empresa' => $empresa,
         ]);
@@ -98,6 +127,8 @@ class EmpresaController extends Controller
      */
     public function edit(Empresa $empresa): Response
     {
+        $empresa->load('endereco');
+        
         return Inertia::render('empresas/Edit', [
             'empresa' => $empresa,
         ]);
@@ -110,20 +141,49 @@ class EmpresaController extends Controller
     {
         $data = $request->validated();
         
-        // Processa o upload da imagem se existir
-        if ($request->hasFile('logo')) {
-            // Remove a imagem anterior se existir
-            if ($empresa->logo_path && Storage::disk('public')->exists($empresa->logo_path)) {
-                Storage::disk('public')->delete($empresa->logo_path);
+        DB::beginTransaction();
+        try {
+            // Processa o endereço
+            if (!empty($data['endereco'])) {
+                if ($empresa->endereco_id) {
+                    // Atualiza endereço existente
+                    $empresa->endereco->update($data['endereco']);
+                } else {
+                    // Cria novo endereço se houver dados
+                    if (!empty($data['endereco']['endereco'])) {
+                        $endereco = Endereco::create($data['endereco']);
+                        $data['endereco_id'] = $endereco->id;
+                    }
+                }
             }
             
-            $data['logo_path'] = $request->file('logo')->store('empresas/logos', 'public');
+            // Remove dados de endereço do array principal
+            unset($data['endereco']);
+            
+            // Processa o upload da imagem se existir
+            if ($request->hasFile('logo')) {
+                // Remove a imagem anterior se existir
+                if ($empresa->logo_path && Storage::disk('public')->exists($empresa->logo_path)) {
+                    Storage::disk('public')->delete($empresa->logo_path);
+                }
+                
+                $data['logo_path'] = $request->file('logo')->store('empresas/logos', 'public');
+            }
+
+            $empresa->update($data);
+            
+            DB::commit();
+
+            return to_route('empresas.index')
+                ->with('success', 'Empresa atualizada com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Erro ao atualizar empresa:', ['error' => $e->getMessage()]);
+            
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Erro ao atualizar empresa. Tente novamente.']);
         }
-
-        $empresa->update($data);
-
-        return to_route('empresas.index')
-            ->with('success', 'Empresa atualizada com sucesso!');
     }
 
     /**

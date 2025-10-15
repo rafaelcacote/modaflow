@@ -1,14 +1,27 @@
 <script setup lang="ts">
 import EmpresaController from '@/actions/App/Http/Controllers/EmpresaController';
 import { index as empresasIndex } from '@/routes/empresas';
-import { Form, Head, usePage } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent } from '@/components/ui/card';
 import DeleteEmpresa from '@/components/DeleteEmpresa.vue';
 import { useToast } from '@/composables/useToast';
 import EmpresaForm from '@/components/empresas/EmpresaForm.vue';
+import EnderecoForm from '@/components/endereco/EnderecoForm.vue';
 import FormActions from '@/components/empresas/FormActions.vue';
+import { Building2 } from 'lucide-vue-next';
 import type { BreadcrumbItem } from '@/types';
+
+interface Endereco {
+    id?: number;
+    endereco?: string;
+    numero?: string | null;
+    complemento?: string | null;
+    bairro?: string | null;
+    municipio_id?: number;
+    cep?: string | null;
+    referencia?: string | null;
+}
 
 interface Empresa {
     id: number;
@@ -21,6 +34,7 @@ interface Empresa {
     ativo: boolean;
     data_adesao: string;
     data_expiracao: string | null;
+    endereco?: Endereco | null;
     created_at: string;
     updated_at: string;
 }
@@ -30,13 +44,49 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const page = usePage();
 const toast = useToast();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Empresas', href: empresasIndex().url },
     { title: props.empresa.razao_social, href: EmpresaController.edit(props.empresa).url },
 ];
+
+// Inicializa o form com os dados da empresa
+const form = useForm({
+    razao_social: props.empresa.razao_social,
+    nome_fantasia: props.empresa.nome_fantasia,
+    cnpj: props.empresa.cnpj || '',
+    email: props.empresa.email,
+    logo: null as File | null,
+    telefone: props.empresa.telefone || '',
+    ativo: props.empresa.ativo ? 1 : 0,
+    data_adesao: props.empresa.data_adesao,
+    data_expiracao: props.empresa.data_expiracao || '',
+    endereco: {
+        endereco: props.empresa.endereco?.endereco || '',
+        numero: props.empresa.endereco?.numero || '',
+        complemento: props.empresa.endereco?.complemento || '',
+        bairro: props.empresa.endereco?.bairro || '',
+        municipio_id: props.empresa.endereco?.municipio_id || null,
+        cep: props.empresa.endereco?.cep || '',
+        referencia: props.empresa.endereco?.referencia || '',
+    },
+});
+
+const handleSubmit = () => {
+    // PUT suporta forceFormData, o Inertia converte automaticamente para POST com _method
+    form.put(EmpresaController.update(props.empresa).url, {
+        preserveScroll: true,
+        forceFormData: true,
+        onSuccess: () => {
+            toast.success('Empresa atualizada com sucesso!');
+        },
+        onError: (errors) => {
+            console.log('Errors:', errors);
+            toast.error('Erro ao atualizar empresa', 'Verifique os campos e tente novamente.');
+        },
+    });
+};
 </script>
 
 <template>
@@ -46,9 +96,12 @@ const breadcrumbItems: BreadcrumbItem[] = [
         <div class="mx-auto w-full max-w-[1920px] space-y-8 px-6 py-8 lg:px-8">
             <!-- Page Header -->
             <div class="space-y-2">
-                <h1 class="text-3xl font-bold tracking-tight text-foreground">
-                    Editar Empresa
-                </h1>
+                <div class="flex items-center gap-3">
+                    <Building2 class="h-8 w-8 text-primary" />
+                    <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                        Editar Empresa
+                    </h1>
+                </div>
                 <p class="text-base text-muted-foreground">
                     Atualize as informações da empresa {{ empresa.nome_fantasia }}.
                 </p>
@@ -73,28 +126,26 @@ const breadcrumbItems: BreadcrumbItem[] = [
             </Card>
 
             <!-- Form -->
-            <Form
-                v-bind="EmpresaController.update.form(empresa)"
-                enctype="multipart/form-data"
-                :options="{
-                    preserveScroll: true,
-                }"
-                @success="toast.success('Empresa atualizada com sucesso!')"
-                @error="toast.error('Erro ao atualizar empresa', 'Verifique os campos e tente novamente.')"
-                class="space-y-6"
-                v-slot="{ errors, processing, recentlySuccessful }"
-            >
+            <form @submit.prevent="handleSubmit" class="space-y-6">
                 <EmpresaForm 
+                    :form="form"
                     :empresa="empresa"
-                    :errors="errors"
-                    :processing="processing"
+                    :errors="form.errors"
+                    :processing="form.processing"
+                />
+                
+                <EnderecoForm 
+                    :form="form"
+                    :endereco="empresa.endereco ?? undefined"
+                    :errors="form.errors"
+                    :processing="form.processing"
                 />
                 
                 <FormActions 
-                    :processing="processing"
-                    :recentlySuccessful="recentlySuccessful"
+                    :processing="form.processing"
+                    :recentlySuccessful="form.recentlySuccessful"
                 />
-            </Form>
+            </form>
         </div>
     </AppLayout>
 </template>

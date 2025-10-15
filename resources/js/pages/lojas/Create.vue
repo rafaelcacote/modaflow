@@ -1,32 +1,39 @@
 <script setup lang="ts">
-import EmpresaController from '@/actions/App/Http/Controllers/EmpresaController';
-import { index as empresasIndex } from '@/routes/empresas';
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { useToast } from '@/composables/useToast';
-import EmpresaForm from '@/components/empresas/EmpresaForm.vue';
+import LojaForm from '@/components/lojas/LojaForm.vue';
 import EnderecoForm from '@/components/endereco/EnderecoForm.vue';
-import FormActions from '@/components/empresas/FormActions.vue';
-import { Building2 } from 'lucide-vue-next';
+import FormActions from '@/components/lojas/FormActions.vue';
+import { Store } from 'lucide-vue-next';
 import type { BreadcrumbItem } from '@/types';
 
+interface Empresa {
+    id: number;
+    razao_social: string;
+    nome_fantasia: string;
+}
+
+interface Props {
+    empresa: Empresa;
+}
+
+const props = defineProps<Props>();
 const toast = useToast();
 
 const breadcrumbItems: BreadcrumbItem[] = [
-    { title: 'Empresas', href: empresasIndex().url },
-    { title: 'Nova Empresa', href: EmpresaController.create().url },
+    { title: 'Empresas', href: '/empresas' },
+    { title: props.empresa.nome_fantasia, href: `/empresas/${props.empresa.id}` },
+    { title: 'Lojas', href: `/empresas/${props.empresa.id}/lojas` },
+    { title: 'Nova Loja', href: `/empresas/${props.empresa.id}/lojas/create` },
 ];
 
 const form = useForm({
-    razao_social: '',
-    nome_fantasia: '',
+    nome: '',
     cnpj: '',
     email: '',
-    logo: null as File | null,
     telefone: '',
     ativo: 1,
-    data_adesao: new Date().toISOString().split('T')[0],
-    data_expiracao: '',
     endereco: {
         endereco: '',
         numero: '',
@@ -39,45 +46,43 @@ const form = useForm({
 });
 
 const handleSubmit = () => {
-    console.log('Form data:', form);
-    console.log('Logo:', form.logo);
-    
-    form.post(EmpresaController.store().url, {
+    form.post(`/empresas/${props.empresa.id}/lojas`, {
         preserveScroll: true,
-        forceFormData: true,
         onSuccess: () => {
-            toast.success('Empresa cadastrada com sucesso!');
+            toast.success('Loja cadastrada com sucesso!');
         },
         onError: (errors) => {
             console.log('Errors:', errors);
-            toast.error('Erro ao cadastrar empresa', 'Verifique os campos e tente novamente.');
+            toast.error('Erro ao cadastrar loja', 'Verifique os campos e tente novamente.');
         },
     });
 };
 </script>
 
-
 <template>
-    <Head title="Nova Empresa" />
+    <Head :title="`Nova Loja - ${empresa.nome_fantasia}`" />
 
     <AppLayout :breadcrumbs="breadcrumbItems">
         <div class="mx-auto w-full max-w-[1920px] space-y-8 px-6 py-8 lg:px-8">
-            <!-- Page Header -->
             <div class="space-y-2">
                 <div class="flex items-center gap-3">
-                    <Building2 class="h-8 w-8 text-primary" />
-                    <h1 class="text-3xl font-bold tracking-tight text-foreground">
-                        Nova Empresa
-                    </h1>
+                    <Store class="h-8 w-8 text-primary" />
+                    <div>
+                        <h1 class="text-3xl font-bold tracking-tight text-foreground">
+                            Nova Loja
+                        </h1>
+                        <p class="text-sm text-muted-foreground">
+                            {{ empresa.nome_fantasia }}
+                        </p>
+                    </div>
                 </div>
                 <p class="text-base text-muted-foreground">
-                    Preencha as informações abaixo para cadastrar uma nova empresa no sistema.
+                    Preencha as informações abaixo para cadastrar uma nova loja.
                 </p>
             </div>
 
-            <!-- Form Card -->
             <form @submit.prevent="handleSubmit" class="space-y-6">
-                <EmpresaForm 
+                <LojaForm 
                     :form="form"
                     :errors="form.errors"
                     :processing="form.processing"
@@ -94,12 +99,9 @@ const handleSubmit = () => {
                 <FormActions 
                     :processing="form.processing"
                     :isCreate="true"
+                    :empresaId="empresa.id"
                 />
             </form>
         </div>
     </AppLayout>
 </template>
-
-
-
-

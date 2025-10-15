@@ -26,7 +26,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next';
+import { Plus, Search, Pencil, Trash2, Eye, Building2, Store } from 'lucide-vue-next';
 import type { BreadcrumbItem } from '@/types';
 
 interface Empresa {
@@ -77,8 +77,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Verificar flash messages do backend
 onMounted(() => {
-    if (page.props.flash?.success) {
-        toast.success(page.props.flash.success as string);
+    const flash = page.props.flash as any;
+    if (flash?.success) {
+        toast.success(flash.success as string);
     }
 });
 
@@ -91,19 +92,25 @@ const showDeleteDialog = ref(false);
 const empresaToDelete = ref<Empresa | null>(null);
 
 // Watch filters and update URL
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 watch([search, status], () => {
-    router.get(
-        empresasIndex().url,
-        {
-            search: search.value || undefined,
-            status: status.value !== 'all' ? status.value : undefined,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-        }
-    );
-}, { debounce: 300 });
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+    searchTimeout = setTimeout(() => {
+        router.get(
+            empresasIndex().url,
+            {
+                search: search.value || undefined,
+                status: status.value !== 'all' ? status.value : undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            }
+        );
+    }, 300);
+});
 
 const openDeleteDialog = (empresa: Empresa) => {
     empresaToDelete.value = empresa;
@@ -157,7 +164,10 @@ const formatCNPJ = (cnpj: string | null) => {
             <!-- Header -->
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="space-y-1">
-                    <h1 class="text-3xl font-bold tracking-tight text-foreground">Empresas</h1>
+                    <div class="flex items-center gap-3">
+                        <Building2 class="h-8 w-8 text-primary" />
+                        <h1 class="text-3xl font-bold tracking-tight text-foreground">Empresas</h1>
+                    </div>
                     <p class="text-base text-muted-foreground">
                         Gerencie as empresas cadastradas no sistema
                     </p>
@@ -275,22 +285,38 @@ const formatCNPJ = (cnpj: string | null) => {
                             </TableCell>
                             <TableCell class="text-right">
                                 <div class="flex justify-end gap-2">
+                                    <Link :href="`/empresas/${empresa.id}/lojas`">
+                                        <Button variant="ghost" size="sm" title="Lojas">
+                                            <Store class="h-4 w-4 text-blue-600 hover:text-blue-700" />
+                                            <span class="sr-only">Lojas</span>
+                                        </Button>
+                                    </Link>
+                                    
+                                    <Link :href="EmpresaController.show(empresa).url">
+                                        <Button variant="ghost" size="sm" title="Visualizar">
+                                            <Eye class="h-4 w-4 text-green-600 hover:text-green-700" />
+                                            <span class="sr-only">Visualizar</span>
+                                        </Button>
+                                    </Link>
+                                    
                                     <Link :href="EmpresaController.edit(empresa).url">
-                                        <Button variant="ghost" size="sm">
-                                            <Pencil class="h-4 w-4" />
+                                        <Button variant="ghost" size="sm" title="Editar">
+                                            <Pencil class="h-4 w-4 text-orange-600 hover:text-orange-700" />
                                             <span class="sr-only">Editar</span>
                                         </Button>
                                     </Link>
+                                    
                                     <Button
                                         variant="ghost"
                                         size="sm"
+                                        title="Excluir"
                                         @click="openDeleteDialog(empresa)"
                                     >
-                                        <Trash2 class="h-4 w-4 text-red-500" />
+                                        <Trash2 class="h-4 w-4 text-red-600 hover:text-red-700" />
                                         <span class="sr-only">Excluir</span>
                                     </Button>
                                 </div>
-                            </TableCell>
+                            </TableCell>    
                             
                         </TableRow>
                     </TableBody>

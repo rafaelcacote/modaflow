@@ -38,6 +38,15 @@ class EmpresaStoreRequest extends FormRequest
             'ativo' => ['boolean'],
             'data_adesao' => ['nullable', 'date'],
             'data_expiracao' => ['nullable', 'date', 'after:data_adesao'],
+            
+            // Endereço
+            'endereco.endereco' => ['nullable', 'string', 'max:150'],
+            'endereco.numero' => ['nullable', 'string', 'max:10'],
+            'endereco.complemento' => ['nullable', 'string', 'max:150'],
+            'endereco.bairro' => ['nullable', 'string', 'max:45'],
+            'endereco.municipio_id' => ['nullable', 'integer', 'exists:municipios,id'],
+            'endereco.cep' => ['nullable', 'string', 'max:20'],
+            'endereco.referencia' => ['nullable', 'string', 'max:255'],
         ];
     }
 

@@ -93,7 +93,7 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public, laravel, gestao, laravel, multitenancy, produtosestoques, usuariospermissoes, vendasfinanceiro',
+            'search_path' => 'public, laravel, gestao, shared, multitenancy, produtosestoques, usuariospermissoes, vendasfinanceiro',
             'sslmode' => 'prefer',
         ],
 

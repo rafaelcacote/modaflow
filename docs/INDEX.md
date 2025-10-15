@@ -55,27 +55,59 @@ Navegação visual e estruturada de toda a documentação do projeto.
 
 **Ideal para:** Implementar novos recursos backend
 
+---
+
+### 📋 [CRUD-EMPRESAS-REFERENCE.md](./CRUD-EMPRESAS-REFERENCE.md)
+**Documentação de Referência: CRUD de Empresas**
+
+#### Conteúdo:
+- 🎯 Visão geral do CRUD completo implementado
+- 🔧 Stack tecnológica detalhada
+- 🏗️ Arquitetura do sistema com diagramas
+- 💾 Estrutura completa de banco de dados
+- ⚙️ Backend - Laravel (Model, Controller, Requests)
+- 🎨 Frontend - Vue + Inertia (Pages, Components)
+- 🛣️ Sistema de Rotas (Wayfinder)
+- 📤 Upload de arquivos com preview
+- ✅ Validação completa de dados
+- 📐 Padrões de código estabelecidos
+- ✅ **Checklist completo para novos CRUDs**
+
+**Ideal para:** Criar novos CRUDs seguindo o padrão estabelecido
+
+**⭐ RECOMENDADO:** Esta é a documentação mais completa e detalhada para servir como template para todos os próximos CRUDs do sistema.
+
 **Principais Seções:**
 ```
-Models
-├── Nomenclatura
-├── $fillable, $hidden, $casts
-└── Relacionamentos
+Arquitetura
+├── Fluxo de dados completo
+├── Estrutura de diretórios
+└── Integração backend/frontend
 
-Controllers
-├── Métodos CRUD (index, create, store, edit, update, destroy)
-├── Type hints
-└── Inertia responses
+Backend Completo
+├── Migration detalhada
+├── Model com accessors e scopes
+├── Controller resource completo
+├── Form Requests (Store e Update)
+└── Upload de arquivos
 
-Routes
-├── Resource routes
-├── Route groups
-└── Middleware
+Frontend Completo
+├── Página Index (listagem + filtros + paginação)
+├── Página Create
+├── Página Edit
+├── Componentes reutilizáveis
+└── Formatação de campos
 
-Validações
-├── Regras comuns
-├── Form Requests
-└── Validação condicional
+Sistema de Rotas
+├── Routes Wayfinder geradas
+├── Actions tipadas
+└── Exemplos de uso
+
+Checklist Completo
+├── Backend tasks
+├── Frontend tasks
+├── Testes
+└── Documentação
 ```
 
 ---
@@ -284,10 +316,11 @@ Patterns
 ### Por Tarefa:
 
 #### Criar Nova Feature CRUD
-1. **[CRUD-PATTERN.md](./CRUD-PATTERN.md)** → Entender padrões
-2. **[QUICK-REFERENCE.md](./QUICK-REFERENCE.md)** → Comandos rápidos
-3. **[DATABASE-SCHEMA.md](./DATABASE-SCHEMA.md)** → Criar migration
-4. **[FRONTEND-ARCHITECTURE.md](./FRONTEND-ARCHITECTURE.md)** → Criar página
+1. **[CRUD-EMPRESAS-REFERENCE.md](./CRUD-EMPRESAS-REFERENCE.md)** → ⭐ Referência completa (RECOMENDADO)
+2. **[CRUD-PATTERN.md](./CRUD-PATTERN.md)** → Entender padrões gerais
+3. **[QUICK-REFERENCE.md](./QUICK-REFERENCE.md)** → Comandos rápidos
+4. **[DATABASE-SCHEMA.md](./DATABASE-SCHEMA.md)** → Criar migration
+5. **[FRONTEND-ARCHITECTURE.md](./FRONTEND-ARCHITECTURE.md)** → Criar página
 
 #### Resolver Problema/Bug
 1. **[DEVELOPMENT-GUIDE.md](./DEVELOPMENT-GUIDE.md)** → Troubleshooting
@@ -351,17 +384,27 @@ Patterns
 
 ### Quero aprender sobre...
 
+**CRUD Completo (Exemplo Real)**
+→ [CRUD-EMPRESAS-REFERENCE.md](./CRUD-EMPRESAS-REFERENCE.md) ⭐ RECOMENDADO
+
 **Models e Eloquent**
 → [CRUD-PATTERN.md - Models](./CRUD-PATTERN.md#models)
+→ [CRUD-EMPRESAS-REFERENCE.md - Model](./CRUD-EMPRESAS-REFERENCE.md#1-model-empresaphp)
 
 **Controllers e Actions**
 → [CRUD-PATTERN.md - Controllers](./CRUD-PATTERN.md#controllers)
+→ [CRUD-EMPRESAS-REFERENCE.md - Controller](./CRUD-EMPRESAS-REFERENCE.md#2-controller-empresacontrollerphp)
 
 **Validação de Dados**
 → [CRUD-PATTERN.md - Validações](./CRUD-PATTERN.md#validações)
+→ [CRUD-EMPRESAS-REFERENCE.md - Form Requests](./CRUD-EMPRESAS-REFERENCE.md#3-form-requests-validação)
 
 **Componentes Vue**
 → [FRONTEND-ARCHITECTURE.md - Componentes](./FRONTEND-ARCHITECTURE.md#componentes)
+→ [CRUD-EMPRESAS-REFERENCE.md - Componentes](./CRUD-EMPRESAS-REFERENCE.md#4-componente-de-formulário-empresaformvue)
+
+**Upload de Arquivos**
+→ [CRUD-EMPRESAS-REFERENCE.md - Upload](./CRUD-EMPRESAS-REFERENCE.md#-upload-de-arquivos)
 
 **Composables**
 → [FRONTEND-ARCHITECTURE.md - Composables](./FRONTEND-ARCHITECTURE.md#composables)

@@ -4,14 +4,22 @@ Este projeto utiliza uma stack moderna e robusta para desenvolvimento web fullst
 
 ## 📚 Índice da Documentação
 
-1. **[Padrão CRUD do Sistema](./CRUD-PATTERN.md)**
+1. **[⭐ CRUD de Empresas - Referência Completa](./CRUD-EMPRESAS-REFERENCE.md)** ⭐ **NOVO!**
+   - Documentação completa do CRUD implementado
+   - Serve como template para todos os novos CRUDs
+   - Arquitetura backend e frontend detalhada
+   - Checklist completo para implementação
+   - Padrões de código e boas práticas
+   - Upload de arquivos e validação completa
+
+2. **[Padrão CRUD do Sistema](./CRUD-PATTERN.md)**
    - Estrutura de Models, Controllers e Routes
    - Convenções de nomenclatura
    - Validações padrão
    - Relacionamentos de Models
    - Exemplos práticos de implementação
 
-2. **[Arquitetura Frontend](./FRONTEND-ARCHITECTURE.md)**
+3. **[Arquitetura Frontend](./FRONTEND-ARCHITECTURE.md)**
    - Estrutura de componentes Vue
    - Sistema de Layouts
    - Composables e reutilização de lógica
@@ -19,17 +27,27 @@ Este projeto utiliza uma stack moderna e robusta para desenvolvimento web fullst
    - Sistema de rotas com Wayfinder
    - UI Components (shadcn/ui)
 
-3. **[Database Schema](./DATABASE-SCHEMA.md)**
+4. **[Database Schema](./DATABASE-SCHEMA.md)**
    - Estrutura de tabelas e migrations
    - Índices e constraints
    - Relacionamentos entre tabelas
    - Convenções de nomenclatura
 
-4. **[Guia de Desenvolvimento](./DEVELOPMENT-GUIDE.md)**
+5. **[Guia de Desenvolvimento](./DEVELOPMENT-GUIDE.md)**
    - Setup e configuração do ambiente
    - Fluxo de trabalho de desenvolvimento
    - Boas práticas e padrões
    - Debugging e testes
+
+6. **[Referência Rápida](./QUICK-REFERENCE.md)**
+   - Comandos essenciais
+   - Patterns e snippets rápidos
+   - Debug helpers
+
+7. **[Índice Visual](./INDEX.md)**
+   - Navegação completa por toda a documentação
+   - Busca rápida por tópicos
+   - Mapa de navegação por tarefas
 
 ## 🛠️ Stack Tecnológico
 
