@@ -5,6 +5,7 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\EstadoController;
 use App\Http\Controllers\LojaController;
 use App\Http\Controllers\MunicipioController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -19,6 +20,7 @@ Route::get('dashboard', function () {
 // Rotas de Empresas (protegidas por autenticação)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('empresas', EmpresaController::class);
+    Route::resource('users', UserController::class);
     
     // Rotas aninhadas de Lojas
     Route::prefix('empresas/{empresa}')->group(function () {
@@ -40,6 +42,9 @@ Route::middleware(['auth', 'verified'])->prefix('api')->group(function () {
     Route::get('municipios/{id}', [MunicipioController::class, 'show'])->name('api.municipios.show');
     
     Route::get('cep/{cep}', [CepController::class, 'show'])->name('api.cep.show');
+    
+    // API para buscar lojas por empresa
+    Route::get('lojas-by-empresa', [UserController::class, 'getLojasByEmpresa'])->name('api.lojas-by-empresa');
 });
 
 require __DIR__.'/settings.php';

@@ -13,9 +13,10 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as empresasIndex } from '@/routes/empresas';
+import { index as usersIndex } from '@/routes/users';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Building2 } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Building2, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -28,6 +29,11 @@ const mainNavItems: NavItem[] = [
         title: 'Empresas',
         href: empresasIndex(),
         icon: Building2,
+    },
+    {
+        title: 'Usuários',
+        href: usersIndex(),
+        icon: Users,
     },
 ];
 
