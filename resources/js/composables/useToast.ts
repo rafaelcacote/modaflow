@@ -6,28 +6,52 @@ export interface Toast {
     title: string;
     message?: string;
     duration?: number;
+    progress?: number;
+    startTime?: number;
 }
 
 const toasts = ref<Toast[]>([]);
+const progressIntervals = ref<Map<string, number>>(new Map());
 
 let idCounter = 0;
 
 export const useToast = () => {
     const add = (toast: Omit<Toast, 'id'>) => {
         const id = `toast-${++idCounter}`;
+        const startTime = Date.now();
+        const duration = toast.duration || 5000;
+        
         const newToast: Toast = {
             id,
-            duration: 5000,
+            duration,
+            progress: 100,
+            startTime,
             ...toast,
         };
 
         toasts.value.push(newToast);
 
-        // Auto remove after duration
-        if (newToast.duration && newToast.duration > 0) {
-            setTimeout(() => {
-                remove(id);
-            }, newToast.duration);
+        // Start progress bar animation
+        if (duration > 0) {
+            const interval = window.setInterval(() => {
+                const now = Date.now();
+                const elapsed = now - startTime;
+                const remaining = Math.max(0, duration - elapsed);
+                
+                // Update progress
+                const toastIndex = toasts.value.findIndex(t => t.id === id);
+                if (toastIndex > -1) {
+                    toasts.value[toastIndex].progress = (remaining / duration) * 100;
+                }
+                
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    progressIntervals.value.delete(id);
+                    remove(id);
+                }
+            }, 10);
+            
+            progressIntervals.value.set(id, interval);
         }
 
         return id;
@@ -37,6 +61,13 @@ export const useToast = () => {
         const index = toasts.value.findIndex((t) => t.id === id);
         if (index > -1) {
             toasts.value.splice(index, 1);
+        }
+        
+        // Clear interval if exists
+        const interval = progressIntervals.value.get(id);
+        if (interval) {
+            clearInterval(interval);
+            progressIntervals.value.delete(id);
         }
     };
 
@@ -57,6 +88,9 @@ export const useToast = () => {
     };
 
     const clear = () => {
+        // Clear all intervals
+        progressIntervals.value.forEach(interval => clearInterval(interval));
+        progressIntervals.value.clear();
         toasts.value = [];
     };
 

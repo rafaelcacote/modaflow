@@ -60,8 +60,9 @@ const form = useForm({
     logo: null as File | null,
     telefone: props.empresa.telefone || '',
     ativo: props.empresa.ativo ? 1 : 0,
-    data_adesao: props.empresa.data_adesao,
-    data_expiracao: props.empresa.data_expiracao || '',
+    // Garante que as datas estão no formato YYYY-MM-DD
+    data_adesao: props.empresa.data_adesao?.split('T')[0] || props.empresa.data_adesao,
+    data_expiracao: props.empresa.data_expiracao?.split('T')[0] || '',
     endereco: {
         endereco: props.empresa.endereco?.endereco || '',
         numero: props.empresa.endereco?.numero || '',
@@ -74,18 +75,43 @@ const form = useForm({
 });
 
 const handleSubmit = () => {
-    // PUT suporta forceFormData, o Inertia converte automaticamente para POST com _method
-    form.put(EmpresaController.update(props.empresa).url, {
+    // Log para debug
+    console.log('Form data before submit:', {
+        razao_social: form.razao_social,
+        nome_fantasia: form.nome_fantasia,
+        cnpj: form.cnpj,
+        email: form.email,
+        telefone: form.telefone,
+        ativo: form.ativo,
+        data_adesao: form.data_adesao,
+        data_expiracao: form.data_expiracao,
+        endereco: form.endereco,
+        logo: form.logo,
+    });
+    
+    const options = {
         preserveScroll: true,
-        forceFormData: true,
+        forceFormData: !!form.logo, // Força FormData quando há logo
         onSuccess: () => {
             toast.success('Empresa atualizada com sucesso!');
         },
-        onError: (errors) => {
-            console.log('Errors:', errors);
+        onError: (errors: Record<string, string>) => {
+            console.log('Validation errors:', errors);
             toast.error('Erro ao atualizar empresa', 'Verifique os campos e tente novamente.');
         },
-    });
+    };
+    
+    // Quando há logo, usa POST com _method=PUT no payload (method spoofing)
+    // Quando não há logo, usa PUT normal
+    if (form.logo) {
+        // Transforma os dados para incluir _method
+        form.transform((data) => ({
+            ...data,
+            _method: 'PUT',
+        })).post(EmpresaController.update(props.empresa).url, options);
+    } else {
+        form.put(EmpresaController.update(props.empresa).url, options);
+    }
 };
 </script>
 

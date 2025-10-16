@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 class CepController extends Controller
 {
     /**
-     * Search CEP using ViaCEP API.
+     * Search CEP using multiple APIs with fallback.
      *
      * @param  string  $cep
      * @return \Illuminate\Http\JsonResponse
@@ -27,56 +27,176 @@ class CepController extends Controller
             ], 400);
         }
         
+        // Tenta buscar o CEP em múltiplas APIs
+        $data = $this->searchCepWithFallback($cep);
+        
+        if (!$data) {
+            return response()->json([
+                'error' => 'CEP não encontrado ou serviço temporariamente indisponível'
+            ], 404);
+        }
+        
+        // Busca o estado pelo UF
+        $estado = Estado::where('uf', $data['uf'])->first();
+        
+        // Busca o município pelo nome e estado
+        $municipio = null;
+        if ($estado) {
+            $municipio = Municipio::where('estado_id', $estado->id)
+                ->where('nome', 'LIKE', '%' . $data['cidade'] . '%')
+                ->first();
+        }
+        
+        // Formata a resposta
+        $resultado = [
+            'cep' => $data['cep'],
+            'endereco' => $data['endereco'],
+            'complemento' => $data['complemento'],
+            'bairro' => $data['bairro'],
+            'cidade' => $data['cidade'],
+            'uf' => $data['uf'],
+            'estado_id' => $estado ? $estado->id : null,
+            'municipio_id' => $municipio ? $municipio->id : null,
+        ];
+        
+        return response()->json($resultado);
+    }
+    
+    /**
+     * Tenta buscar CEP em múltiplas APIs com fallback.
+     *
+     * @param  string  $cep
+     * @return array|null
+     */
+    private function searchCepWithFallback($cep)
+    {
+        // Lista de APIs para tentar, em ordem de prioridade
+        $apis = [
+            'brasilapi' => fn() => $this->searchBrasilAPI($cep),
+            'viacep' => fn() => $this->searchViaCEP($cep),
+            'opencep' => fn() => $this->searchOpenCEP($cep),
+        ];
+        
+        // Tenta cada API até conseguir uma resposta válida
+        foreach ($apis as $apiName => $searchFunction) {
+            try {
+                $data = $searchFunction();
+                if ($data) {
+                    \Log::info("CEP encontrado usando {$apiName}: {$cep}");
+                    return $data;
+                }
+            } catch (\Exception $e) {
+                \Log::warning("Erro ao buscar CEP {$cep} na {$apiName}: " . $e->getMessage());
+                continue;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Busca CEP na API BrasilAPI.
+     *
+     * @param  string  $cep
+     * @return array|null
+     */
+    private function searchBrasilAPI($cep)
+    {
         try {
-            // Busca na API do ViaCEP (desabilitando verificação SSL em desenvolvimento)
+            $response = Http::timeout(10)
+                ->get("https://brasilapi.com.br/api/cep/v2/{$cep}");
+            
+            if (!$response->successful()) {
+                return null;
+            }
+            
+            $data = $response->json();
+            
+            return [
+                'cep' => $data['cep'] ?? '',
+                'endereco' => $data['street'] ?? '',
+                'complemento' => '',
+                'bairro' => $data['neighborhood'] ?? '',
+                'cidade' => $data['city'] ?? '',
+                'uf' => $data['state'] ?? '',
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+    
+    /**
+     * Busca CEP na API ViaCEP.
+     *
+     * @param  string  $cep
+     * @return array|null
+     */
+    private function searchViaCEP($cep)
+    {
+        try {
             $response = Http::withOptions([
-                'verify' => false, // Desabilita verificação SSL em desenvolvimento
+                'verify' => false,
+                'timeout' => 10,
+                'connect_timeout' => 5,
             ])->get("https://viacep.com.br/ws/{$cep}/json/");
             
             if (!$response->successful()) {
-                return response()->json([
-                    'error' => 'Erro ao buscar CEP'
-                ], 500);
+                return null;
             }
             
             $data = $response->json();
             
             // Verifica se o CEP foi encontrado
             if (isset($data['erro']) && $data['erro']) {
-                return response()->json([
-                    'error' => 'CEP não encontrado'
-                ], 404);
+                return null;
             }
             
-            // Busca o estado pelo UF
-            $estado = Estado::where('uf', $data['uf'])->first();
-            
-            // Busca o município pelo nome e estado
-            $municipio = null;
-            if ($estado) {
-                $municipio = Municipio::where('estado_id', $estado->id)
-                    ->where('nome', 'LIKE', '%' . $data['localidade'] . '%')
-                    ->first();
-            }
-            
-            // Formata a resposta
-            $resultado = [
-                'cep' => $data['cep'],
-                'endereco' => $data['logradouro'],
-                'complemento' => $data['complemento'],
-                'bairro' => $data['bairro'],
-                'cidade' => $data['localidade'],
-                'uf' => $data['uf'],
-                'estado_id' => $estado ? $estado->id : null,
-                'municipio_id' => $municipio ? $municipio->id : null,
+            return [
+                'cep' => $data['cep'] ?? '',
+                'endereco' => $data['logradouro'] ?? '',
+                'complemento' => $data['complemento'] ?? '',
+                'bairro' => $data['bairro'] ?? '',
+                'cidade' => $data['localidade'] ?? '',
+                'uf' => $data['uf'] ?? '',
             ];
-            
-            return response()->json($resultado);
-            
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Erro ao buscar CEP: ' . $e->getMessage()
-            ], 500);
+            return null;
+        }
+    }
+    
+    /**
+     * Busca CEP na API OpenCEP.
+     *
+     * @param  string  $cep
+     * @return array|null
+     */
+    private function searchOpenCEP($cep)
+    {
+        try {
+            $response = Http::timeout(10)
+                ->get("https://opencep.com/v1/{$cep}");
+            
+            if (!$response->successful()) {
+                return null;
+            }
+            
+            $data = $response->json();
+            
+            // Verifica se retornou erro
+            if (isset($data['error'])) {
+                return null;
+            }
+            
+            return [
+                'cep' => $data['cep'] ?? '',
+                'endereco' => $data['logradouro'] ?? '',
+                'complemento' => $data['complemento'] ?? '',
+                'bairro' => $data['bairro'] ?? '',
+                'cidade' => $data['localidade'] ?? '',
+                'uf' => $data['uf'] ?? '',
+            ];
+        } catch (\Exception $e) {
+            return null;
         }
     }
 }

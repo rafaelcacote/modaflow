@@ -139,6 +139,9 @@ class EmpresaController extends Controller
      */
     public function update(EmpresaUpdateRequest $request, Empresa $empresa): RedirectResponse
     {
+        \Log::info('Update request data:', $request->all());
+        \Log::info('Has file logo:', [$request->hasFile('logo')]);
+        
         $data = $request->validated();
         
         DB::beginTransaction();

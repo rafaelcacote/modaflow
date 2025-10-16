@@ -23,7 +23,7 @@ class MunicipioController extends Controller
             $query->where('estado_id', $estadoId);
         }
         
-        $municipios = $query->orderBy('nome')->get(['id', 'nome', 'estado_id', 'ibge_codigo']);
+        $municipios = $query->orderBy('nome')->get(['id', 'nome', 'estado_id']);
         
         return response()->json($municipios);
     }

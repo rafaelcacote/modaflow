@@ -96,64 +96,72 @@ watch(ativo, (value) => {
             </CardDescription>
         </CardHeader>
         <CardContent class="space-y-6">
-            <div class="space-y-2">
-                <Label for="nome" class="text-sm font-medium">
-                    Nome <span class="text-red-500">*</span>
-                </Label>
-                <Input
-                    id="nome"
-                    v-model="form.nome"
-                    type="text"
-                    placeholder="Nome da loja"
-                    :disabled="processing"
-                    :class="{ 'border-red-500': errors.nome }"
-                />
-                <InputError v-if="errors.nome" :message="errors.nome" />
+            <!-- Linha 1: Nome, CNPJ, Email, Telefone -->
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <!-- Nome -->
+                <div class="space-y-2">
+                    <Label for="nome" class="text-sm font-medium">
+                        Nome <span class="text-red-500">*</span>
+                    </Label>
+                    <Input
+                        id="nome"
+                        v-model="form.nome"
+                        type="text"
+                        placeholder="Nome da loja"
+                        :disabled="processing"
+                        :class="{ 'border-red-500': errors.nome }"
+                    />
+                    <InputError v-if="errors.nome" :message="errors.nome" />
+                </div>
+
+                <!-- CNPJ -->
+                <div class="space-y-2">
+                    <Label for="cnpj" class="text-sm font-medium">CNPJ</Label>
+                    <Input
+                        id="cnpj"
+                        v-model="cnpjInput"
+                        @input="handleCNPJInput"
+                        type="text"
+                        placeholder="XX.XXX.XXX/XXXX-XX"
+                        maxlength="18"
+                        :disabled="processing"
+                        :class="{ 'border-red-500': errors.cnpj }"
+                    />
+                    <InputError v-if="errors.cnpj" :message="errors.cnpj" />
+                </div>
+
+                <!-- Email -->
+                <div class="space-y-2">
+                    <Label for="email" class="text-sm font-medium">E-mail</Label>
+                    <Input
+                        id="email"
+                        v-model="form.email"
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        :disabled="processing"
+                        :class="{ 'border-red-500': errors.email }"
+                    />
+                    <InputError v-if="errors.email" :message="errors.email" />
+                </div>
+
+                <!-- Telefone -->
+                <div class="space-y-2">
+                    <Label for="telefone" class="text-sm font-medium">Telefone</Label>
+                    <Input
+                        id="telefone"
+                        v-model="telefoneInput"
+                        @input="handlePhoneInput"
+                        type="text"
+                        placeholder="(XX) XXXXX-XXXX"
+                        maxlength="15"
+                        :disabled="processing"
+                        :class="{ 'border-red-500': errors.telefone }"
+                    />
+                    <InputError v-if="errors.telefone" :message="errors.telefone" />
+                </div>
             </div>
 
-            <div class="space-y-2">
-                <Label for="cnpj" class="text-sm font-medium">CNPJ</Label>
-                <Input
-                    id="cnpj"
-                    v-model="cnpjInput"
-                    @input="handleCNPJInput"
-                    type="text"
-                    placeholder="XX.XXX.XXX/XXXX-XX"
-                    maxlength="18"
-                    :disabled="processing"
-                    :class="{ 'border-red-500': errors.cnpj }"
-                />
-                <InputError v-if="errors.cnpj" :message="errors.cnpj" />
-            </div>
-
-            <div class="space-y-2">
-                <Label for="email" class="text-sm font-medium">E-mail</Label>
-                <Input
-                    id="email"
-                    v-model="form.email"
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    :disabled="processing"
-                    :class="{ 'border-red-500': errors.email }"
-                />
-                <InputError v-if="errors.email" :message="errors.email" />
-            </div>
-
-            <div class="space-y-2">
-                <Label for="telefone" class="text-sm font-medium">Telefone</Label>
-                <Input
-                    id="telefone"
-                    v-model="telefoneInput"
-                    @input="handlePhoneInput"
-                    type="text"
-                    placeholder="(XX) XXXXX-XXXX"
-                    maxlength="15"
-                    :disabled="processing"
-                    :class="{ 'border-red-500': errors.telefone }"
-                />
-                <InputError v-if="errors.telefone" :message="errors.telefone" />
-            </div>
-
+            <!-- Linha 2: Status Loja -->
             <div class="flex items-center justify-between space-x-2 rounded-lg border border-border p-4">
                 <div class="space-y-0.5">
                     <Label for="ativo" class="text-base font-medium">Status da Loja</Label>
