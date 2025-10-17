@@ -32,7 +32,7 @@ class Empresa extends Model
      *
      * @var string
      */
-    protected $table = 'empresas';
+    protected $table = 'multitenancy.empresas';
 
     /**
      * The attributes that are mass assignable.

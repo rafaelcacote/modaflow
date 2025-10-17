@@ -237,7 +237,7 @@ class UserController extends Controller
         $lojas = Loja::where('empresa_id', $empresaId)
             ->ativas()
             ->orderBy('nome')
-            ->get(['id', 'nome']);
+            ->get(['id', 'nome', 'cnpj']);
             
         return response()->json($lojas);
     }

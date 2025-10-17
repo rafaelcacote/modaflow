@@ -14,6 +14,13 @@ class User extends Authenticatable
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'shared.users';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -86,6 +93,6 @@ class User extends Authenticatable
      */
     public function lojas()
     {
-        return $this->belongsToMany(Loja::class, 'user_lojas');
+        return $this->belongsToMany(Loja::class, 'shared.user_lojas', 'user_id', 'loja_id');
     }
 }

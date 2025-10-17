@@ -15,7 +15,7 @@ class Loja extends Model
      *
      * @var string
      */
-    protected $table = 'lojas';
+    protected $table = 'multitenancy.lojas';
 
     /**
      * The attributes that are mass assignable.

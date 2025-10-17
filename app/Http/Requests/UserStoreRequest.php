@@ -33,7 +33,7 @@ class UserStoreRequest extends FormRequest
             'cpf' => ['nullable', 'string', 'min:11', 'max:11', Rule::unique('users', 'cpf')->whereNull('deleted_at')],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'empresa_id' => ['nullable', 'integer', 'exists:empresas,id'],
-            'tipo' => ['nullable', 'string', 'max:20'],
+            'tipo' => ['nullable', 'string', 'in:proprietario,gerente,vendedor,super_admin'],
             'ativo' => ['nullable', 'boolean'],
             'lojas' => ['nullable', 'array'],
             'lojas.*' => ['integer', 'exists:lojas,id'],
@@ -59,7 +59,7 @@ class UserStoreRequest extends FormRequest
             'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
             'password.confirmed' => 'A confirmação da senha não confere.',
             'empresa_id.exists' => 'A empresa selecionada não existe.',
-            'tipo.max' => 'O tipo não pode ter mais de 20 caracteres.',
+            'tipo.in' => 'O tipo deve ser: Proprietário, Gerente, Vendedor ou Super Admin.',
             'lojas.array' => 'As lojas devem ser uma lista.',
             'lojas.*.exists' => 'Uma das lojas selecionadas não existe.',
         ];

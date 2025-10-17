@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, nextTick } from 'vue';
+import { ref, watch, computed, nextTick, onMounted } from 'vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -52,6 +52,18 @@ const updateCpf = (value: string | number) => {
     }
 };
 
+// Função para buscar lojas quando uma empresa é selecionada
+const buscarLojas = async (empresaId: number) => {
+    try {
+        const response = await fetch(`/api/lojas-by-empresa?empresa_id=${empresaId}`);
+        const lojas = await response.json();
+        lojasDisponiveis.value = lojas;
+    } catch (error) {
+        console.error('Erro ao buscar lojas:', error);
+        lojasDisponiveis.value = [];
+    }
+};
+
 // Atualiza os campos quando o usuário muda
 watch(() => props.user, (newUser) => {
     if (newUser) {
@@ -64,7 +76,7 @@ watch(() => props.user, (newUser) => {
             buscarLojas(newUser.empresa.id);
         }
     }
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 // Computed para filtrar empresas com base na busca
 const empresasFiltradas = computed(() => {
@@ -83,18 +95,6 @@ const empresaSelecionada = computed(() => {
     if (!selectedEmpresaId.value) return null;
     return props.empresas.find(e => e.id.toString() === selectedEmpresaId.value);
 });
-
-// Função para buscar lojas quando uma empresa é selecionada
-const buscarLojas = async (empresaId: number) => {
-    try {
-        const response = await fetch(`/api/lojas-by-empresa?empresa_id=${empresaId}`);
-        const lojas = await response.json();
-        lojasDisponiveis.value = lojas;
-    } catch (error) {
-        console.error('Erro ao buscar lojas:', error);
-        lojasDisponiveis.value = [];
-    }
-};
 
 // Função para navegação por teclado
 const handleKeyDown = (event: KeyboardEvent) => {
@@ -192,6 +192,20 @@ watch([ativo], () => {
         props.form.ativo = ativo.value;
     }
 });
+
+// Inicializar dados quando o componente for montado
+onMounted(() => {
+    if (props.user) {
+        selectedEmpresaId.value = props.user.empresa?.id?.toString() || '';
+        lojasSelecionadas.value = props.user.lojas?.map(loja => loja.id) || [];
+        ativo.value = !!props.user.ativo;
+        
+        // Se não há form (usando Form component), buscar lojas se empresa existir
+        if (!props.form && props.user.empresa) {
+            buscarLojas(props.user.empresa.id);
+        }
+    }
+});
 </script>
 
 <template>
@@ -210,7 +224,7 @@ watch([ativo], () => {
                 <Label for="name">Nome *</Label>
                 <Input
                     id="name"
-                    :model-value="form?.name || ''"
+                    :model-value="form?.name || user?.name || ''"
                     @update:model-value="form && (form.name = $event)"
                     type="text"
                     placeholder="Nome completo do usuário"
@@ -224,7 +238,7 @@ watch([ativo], () => {
                 <Label for="email">Email *</Label>
                 <Input
                     id="email"
-                    :model-value="form?.email || ''"
+                    :model-value="form?.email || user?.email || ''"
                     @update:model-value="form && (form.email = $event)"
                     type="email"
                     placeholder="email@exemplo.com"
@@ -251,15 +265,21 @@ watch([ativo], () => {
             <!-- Tipo -->
             <div class="space-y-2">
                 <Label for="tipo">Tipo</Label>
-                <Input
+                <select
                     id="tipo"
-                    :model-value="form?.tipo || ''"
-                    @update:model-value="form && (form.tipo = $event)"
-                    type="text"
-                    placeholder="Ex: Admin, Vendedor..."
-                    maxlength="20"
-                    :class="{ 'border-red-500': errors.tipo }"
-                />
+                    :value="form?.tipo || user?.tipo || ''"
+                    @change="form && (form.tipo = $event.target.value)"
+                    :class="[
+                        'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+                        { 'border-red-500': errors.tipo }
+                    ]"
+                >
+                    <option value="">Selecione um tipo</option>
+                    <option value="proprietario">Proprietário</option>
+                    <option value="gerente">Gerente</option>
+                    <option value="vendedor">Vendedor</option>
+                    <option value="super_admin">Super Admin</option>
+                </select>
                 <InputError :message="errors.tipo" />
             </div>
 
