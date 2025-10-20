@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToEmpresa;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Loja extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, BelongsToEmpresa;
 
     /**
      * The table associated with the model.
@@ -68,14 +69,6 @@ class Loja extends Model
     public function scopeInativas($query)
     {
         return $query->where('ativo', false);
-    }
-
-    /**
-     * Get the empresa that owns the loja.
-     */
-    public function empresa()
-    {
-        return $this->belongsTo(Empresa::class);
     }
 
     /**

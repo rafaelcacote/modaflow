@@ -6,6 +6,8 @@ use App\Http\Controllers\EstadoController;
 use App\Http\Controllers\LojaController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,6 +23,8 @@ Route::get('dashboard', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('empresas', EmpresaController::class);
     Route::resource('users', UserController::class);
+    Route::resource('perfis', RoleController::class)->parameters(['perfis' => 'perfi']);
+    Route::resource('permissoes', PermissionController::class)->parameters(['permissoes' => 'permiso']);
     
     // Rotas aninhadas de Lojas
     Route::prefix('empresas/{empresa}')->group(function () {

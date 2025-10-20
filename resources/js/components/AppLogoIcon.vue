@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 defineOptions({
     inheritAttrs: false,
@@ -10,10 +11,24 @@ interface Props {
 }
 
 defineProps<Props>();
+
+const page = usePage();
+const empresa = page.props.empresa;
 </script>
 
 <template>
+    <!-- Logo da empresa se disponível -->
+    <img 
+        v-if="empresa?.logo_url" 
+        :src="empresa.logo_url" 
+        :alt="empresa.nome_fantasia || empresa.razao_social"
+        class="size-5 object-contain"
+        :class="className"
+        v-bind="$attrs"
+    />
+    <!-- Logo padrão do Laravel se não houver logo da empresa -->
     <svg
+        v-else
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 40 42"
         :class="className"

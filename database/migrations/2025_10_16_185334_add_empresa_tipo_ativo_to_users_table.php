@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('empresa_id')->nullable()->constrained('empresas')->onDelete('set null');
+            $table->foreignId('empresa_id')->nullable()->constrained('multitenancy.empresas')->onDelete('set null');
             $table->string('tipo', 20)->nullable();
             $table->boolean('ativo')->default(true);
             

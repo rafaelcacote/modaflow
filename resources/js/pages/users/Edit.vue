@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import UserController from '@/actions/App/Http/Controllers/UserController';
 import { index as usersIndex } from '@/routes/users';
-import { Form, Head, usePage } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/composables/useToast';
@@ -22,6 +22,32 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Usuários', href: usersIndex().url },
     { title: props.user.name, href: UserController.edit(props.user).url },
 ];
+
+// Inicializa o form com os dados do usuário
+const form = useForm({
+    name: props.user.name,
+    email: props.user.email,
+    cpf: props.user.cpf || '',
+    password: '',
+    password_confirmation: '',
+    empresa_id: props.user.empresa?.id || null,
+    tipo: props.user.tipo || '',
+    ativo: props.user.ativo,
+    lojas: props.user.lojas?.map(loja => loja.id) || [],
+});
+
+const handleSubmit = () => {
+    form.put(UserController.update(props.user).url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Usuário atualizado com sucesso!');
+        },
+        onError: (errors) => {
+            console.log('Errors:', errors);
+            toast.error('Erro ao atualizar usuário', 'Verifique os campos e tente novamente.');
+        },
+    });
+};
 </script>
 
 <template>
@@ -61,26 +87,19 @@ const breadcrumbItems: BreadcrumbItem[] = [
             </Card>
 
             <!-- Form -->
-            <Form
-                v-bind="UserController.update.form(user)"
-                :options="{ preserveScroll: true }"
-                @success="toast.success('Usuário atualizado com sucesso!')"
-                @error="toast.error('Erro ao atualizar usuário')"
-                class="space-y-6"
-                v-slot="{ errors, processing, recentlySuccessful }"
-            >
+            <form @submit.prevent="handleSubmit" class="space-y-6">
                 <UserForm 
                     :user="user"
-                    :errors="errors"
-                    :processing="processing"
+                    :form="form"
+                    :errors="form.errors"
+                    :processing="form.processing"
                     :empresas="empresas"
                 />
                 
                 <FormActions 
-                    :processing="processing"
-                    :recentlySuccessful="recentlySuccessful"
+                    :processing="form.processing"
                 />
-            </Form>
+            </form>
         </div>
     </AppLayout>
 </template>

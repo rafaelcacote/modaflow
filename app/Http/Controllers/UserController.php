@@ -101,11 +101,9 @@ class UserController extends Controller
             $lojas = $data['lojas'] ?? [];
             unset($data['lojas']);
 
-            
             // Criar usuário
             $user = User::create($data);
           
-            
             // Associar lojas se existirem
             if (!empty($lojas)) {
                 $user->lojas()->sync($lojas);
@@ -117,7 +115,7 @@ class UserController extends Controller
                 ->with('success', 'Usuário cadastrado com sucesso!');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Erro ao criar usuário:', ['error' => $e->getMessage()]);
+            \Log::error('Erro ao criar usuário:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             
             return back()
                 ->withInput()

@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
 
     /**
      * The table associated with the model.
@@ -85,7 +86,7 @@ class User extends Authenticatable
      */
     public function empresa()
     {
-        return $this->belongsTo(Empresa::class);
+        return $this->belongsTo(Empresa::class, 'empresa_id', 'id');
     }
 
     /**
@@ -93,6 +94,8 @@ class User extends Authenticatable
      */
     public function lojas()
     {
-        return $this->belongsToMany(Loja::class, 'shared.user_lojas', 'user_id', 'loja_id');
+        return $this->belongsToMany(Loja::class, 'shared.user_lojas', 'user_id', 'loja_id')
+            ->withPivot(['created_at'])
+            ->withTimestamps(['created_at']);
     }
 }

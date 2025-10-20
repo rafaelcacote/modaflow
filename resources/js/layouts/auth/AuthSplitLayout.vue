@@ -6,6 +6,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 const page = usePage();
 const name = page.props.name;
 const quote = page.props.quote;
+const empresa = page.props.empresa;
 
 defineProps<{
     title?: string;
@@ -26,7 +27,7 @@ defineProps<{
                 class="relative z-20 flex items-center text-lg font-medium"
             >
                 <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
-                {{ name }}
+                {{ empresa?.nome_fantasia || empresa?.razao_social || name }}
             </Link>
             <div v-if="quote" class="relative z-20 mt-auto">
                 <blockquote class="space-y-2">

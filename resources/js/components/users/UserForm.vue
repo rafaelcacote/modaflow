@@ -64,16 +64,48 @@ const buscarLojas = async (empresaId: number) => {
     }
 };
 
+// Função para selecionar empresa
+const selecionarEmpresa = (empresaId: string, isInitialization = false) => {
+    const previousEmpresaId = selectedEmpresaId.value;
+    selectedEmpresaId.value = empresaId;
+    empresaSearch.value = ''; // Limpar busca após seleção
+    selectedIndex.value = -1; // Resetar índice selecionado
+    
+    // Atualizar form se existir
+    if (props.form) {
+        props.form.empresa_id = empresaId ? parseInt(empresaId) : null;
+    }
+    
+    // Buscar lojas da empresa
+    if (empresaId) {
+        buscarLojas(parseInt(empresaId));
+    } else {
+        lojasDisponiveis.value = [];
+    }
+    
+    // Limpar lojas selecionadas apenas quando trocar de empresa (não na inicialização)
+    if (!isInitialization && previousEmpresaId !== empresaId) {
+        lojasSelecionadas.value = [];
+        if (props.form) {
+            props.form.lojas = [];
+        }
+    }
+};
+
 // Atualiza os campos quando o usuário muda
 watch(() => props.user, (newUser) => {
     if (newUser) {
-        selectedEmpresaId.value = newUser.empresa?.id?.toString() || '';
+        // Inicializar empresa com flag de inicialização para não limpar lojas
+        if (newUser.empresa) {
+            selecionarEmpresa(newUser.empresa.id.toString(), true);
+        }
+        
         lojasSelecionadas.value = newUser.lojas?.map(loja => loja.id) || [];
         ativo.value = !!newUser.ativo;
         
-        // Se não há form (usando Form component), buscar lojas se empresa existir
-        if (!props.form && newUser.empresa) {
-            buscarLojas(newUser.empresa.id);
+        // Sincronizar lojas com form
+        if (props.form) {
+            props.form.lojas = [...lojasSelecionadas.value];
         }
     }
 }, { deep: true, immediate: true });
@@ -141,31 +173,6 @@ const scrollToSelected = () => {
     }
 };
 
-// Função para selecionar empresa
-const selecionarEmpresa = (empresaId: string) => {
-    selectedEmpresaId.value = empresaId;
-    empresaSearch.value = ''; // Limpar busca após seleção
-    selectedIndex.value = -1; // Resetar índice selecionado
-    
-    // Atualizar form se existir
-    if (props.form) {
-        props.form.empresa_id = empresaId ? parseInt(empresaId) : null;
-    }
-    
-    // Buscar lojas da empresa
-    if (empresaId) {
-        buscarLojas(parseInt(empresaId));
-    } else {
-        lojasDisponiveis.value = [];
-    }
-    
-    // Limpar lojas selecionadas quando trocar de empresa
-    lojasSelecionadas.value = [];
-    if (props.form) {
-        props.form.lojas = [];
-    }
-};
-
 // Função para alternar seleção de loja
 const alternarLoja = (lojaId: number) => {
     const index = lojasSelecionadas.value.indexOf(lojaId);
@@ -177,7 +184,7 @@ const alternarLoja = (lojaId: number) => {
     
     // Atualizar form se existir
     if (props.form) {
-        props.form.lojas = lojasSelecionadas.value;
+        props.form.lojas = [...lojasSelecionadas.value];
     }
 };
 
@@ -193,17 +200,33 @@ watch([ativo], () => {
     }
 });
 
+// Watch para sincronizar lojasSelecionadas com form.lojas
+watch(lojasSelecionadas, (newLojas) => {
+    if (props.form) {
+        props.form.lojas = [...newLojas];
+    }
+}, { deep: true });
+
 // Inicializar dados quando o componente for montado
 onMounted(() => {
     if (props.user) {
-        selectedEmpresaId.value = props.user.empresa?.id?.toString() || '';
+        // Inicializar empresa com flag de inicialização para não limpar lojas
+        if (props.user.empresa) {
+            selecionarEmpresa(props.user.empresa.id.toString(), true);
+        }
+        
         lojasSelecionadas.value = props.user.lojas?.map(loja => loja.id) || [];
         ativo.value = !!props.user.ativo;
         
-        // Se não há form (usando Form component), buscar lojas se empresa existir
-        if (!props.form && props.user.empresa) {
-            buscarLojas(props.user.empresa.id);
+        // Sincronizar lojas com form
+        if (props.form) {
+            props.form.lojas = [...lojasSelecionadas.value];
         }
+    }
+    
+    // Garantir que form.lojas está inicializado mesmo sem user
+    if (props.form && !props.form.lojas) {
+        props.form.lojas = [];
     }
 });
 </script>
@@ -268,7 +291,7 @@ onMounted(() => {
                 <select
                     id="tipo"
                     :value="form?.tipo || user?.tipo || ''"
-                    @change="form && (form.tipo = $event.target.value)"
+                    @change="form && (form.tipo = ($event.target as HTMLSelectElement)?.value)"
                     :class="[
                         'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
                         { 'border-red-500': errors.tipo }
@@ -392,25 +415,23 @@ onMounted(() => {
              </div>
              <div class="grid gap-3 md:grid-cols-2">
                  <div
-                     v-for="loja in lojasDisponiveis"
-                     :key="loja.id"
-                     class="flex items-center space-x-3 p-3 border rounded-md hover:bg-muted/50"
-                 >
-                     <Checkbox
-                         :id="`loja-${loja.id}`"
-                         :checked="lojasSelecionadas.includes(loja.id)"
-                         @update:checked="alternarLoja(loja.id)"
-                     />
-                     <Label
-                         :for="`loja-${loja.id}`"
-                         class="flex items-center gap-2 cursor-pointer flex-1"
-                     >
+                    v-for="loja in lojasDisponiveis"
+                    :key="loja.id"
+                    class="flex items-center space-x-3 p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
+                    @click="alternarLoja(loja.id)"
+                >
+                    <Checkbox
+                        :id="`loja-${loja.id}`"
+                        :model-value="lojasSelecionadas.includes(loja.id)"
+                        @click.stop
+                    />
+                     <div class="flex items-center gap-2 flex-1">
                          <Store class="h-4 w-4 text-muted-foreground" />
                          <div>
                              <div class="font-medium">{{ loja.nome }}</div>
                              <div v-if="loja.cnpj" class="text-sm text-muted-foreground">CNPJ: {{ loja.cnpj }}</div>
                          </div>
-                     </Label>
+                     </div>
                  </div>
              </div>
              <InputError :message="errors.lojas" />

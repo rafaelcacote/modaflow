@@ -16,7 +16,8 @@ return new class extends Migration
         DB::statement('CREATE SCHEMA IF NOT EXISTS multitenancy');
 
         // Criar tabela empresas no schema multitenancy
-        Schema::create('multitenancy.empresas', function (Blueprint $table) {
+        if (!Schema::hasTable('multitenancy.empresas')) {
+            Schema::create('multitenancy.empresas', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
             $table->string('razao_social', 255);
@@ -34,7 +35,8 @@ return new class extends Migration
             $table->index('ativo');
             $table->index('cnpj');
             $table->index('email');
-        });
+            });
+        }
     }
 
     /**
