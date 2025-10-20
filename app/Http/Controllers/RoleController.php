@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\RoleStoreRequest;
 use App\Http\Requests\RoleUpdateRequest;
+use App\Helpers\PermissionHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,11 +13,14 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+
     /**
      * Display a listing of roles.
      */
     public function index(Request $request): Response
     {
+        $this->checkPermission('perfis.index', 'Você não tem permissão para visualizar perfis.');
+
         $query = Role::query();
 
         if ($request->filled('search')) {
@@ -37,7 +41,13 @@ class RoleController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('perfis/Create');
+        $this->checkPermission('perfis.create', 'Você não tem permissão para criar perfis.');
+
+        $permissionsGrouped = PermissionHelper::getAllPermissionsGrouped();
+        
+        return Inertia::render('perfis/Create', [
+            'permissionsGrouped' => $permissionsGrouped,
+        ]);
     }
 
     /**
@@ -45,11 +55,19 @@ class RoleController extends Controller
      */
     public function store(RoleStoreRequest $request): RedirectResponse
     {
+        $this->checkPermission('perfis.store', 'Você não tem permissão para criar perfis.');
+
         $data = $request->validated();
-        Role::create([
+        
+        $role = Role::create([
             'name' => $data['name'],
             'guard_name' => $data['guard_name'] ?? 'web',
         ]);
+        
+        // Atribuir permissões se fornecidas
+        if (isset($data['permissions']) && !empty($data['permissions'])) {
+            $role->syncPermissions($data['permissions']);
+        }
 
         return to_route('perfis.index')
             ->with('success', 'Perfil criado com sucesso!');
@@ -60,9 +78,13 @@ class RoleController extends Controller
      */
     public function edit(Role $perfi): Response
     {
-        // Note: Route model binding with parameter name {perfi} for resource 'perfis'
+        $permissionsGrouped = PermissionHelper::getAllPermissionsGrouped();
+        $rolePermissions = $perfi->permissions->pluck('id')->toArray();
+        
         return Inertia::render('perfis/Edit', [
             'perfil' => $perfi,
+            'permissionsGrouped' => $permissionsGrouped,
+            'rolePermissions' => $rolePermissions,
         ]);
     }
 
@@ -72,10 +94,16 @@ class RoleController extends Controller
     public function update(RoleUpdateRequest $request, Role $perfi): RedirectResponse
     {
         $data = $request->validated();
+        
         $perfi->update([
             'name' => $data['name'],
             'guard_name' => $data['guard_name'] ?? $perfi->guard_name,
         ]);
+        
+        // Sincronizar permissões
+        if (isset($data['permissions'])) {
+            $perfi->syncPermissions($data['permissions']);
+        }
 
         return to_route('perfis.index')
             ->with('success', 'Perfil atualizado com sucesso!');

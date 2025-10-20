@@ -49,6 +49,8 @@ class UserUpdateRequest extends FormRequest
             'ativo' => ['nullable', 'boolean'],
             'lojas' => ['nullable', 'array'],
             'lojas.*' => ['integer', 'exists:lojas,id'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['integer', 'exists:roles,id'],
         ];
     }
 
@@ -73,6 +75,8 @@ class UserUpdateRequest extends FormRequest
             'tipo.in' => 'O tipo deve ser: Proprietário, Gerente, Vendedor ou Super Admin.',
             'lojas.array' => 'As lojas devem ser uma lista.',
             'lojas.*.exists' => 'Uma das lojas selecionadas não existe.',
+            'roles.array' => 'Os perfis devem ser uma lista.',
+            'roles.*.exists' => 'Um dos perfis selecionados não existe.',
         ];
     }
 }

@@ -21,8 +21,11 @@ import { index as permissoesIndex } from '@/routes/permissoes';
 import { index as perfisIndex } from '@/routes/perfis';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Building2, Users, Shield } from 'lucide-vue-next';
+import { LayoutGrid, Building2, Users, Shield } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+import { usePermissions } from '@/composables/usePermissions';
+
+const { canAccessModule, hasPermission } = usePermissions();
 
 const mainNavItems: NavItem[] = [
     {
@@ -40,20 +43,18 @@ const mainNavItems: NavItem[] = [
         href: usersIndex(),
         icon: Users,
     },
-];
+].filter(item => {
+    // Filtrar itens baseado nas permissões
+    if (item.title === 'Empresas') {
+        return canAccessModule('empresas');
+    }
+    if (item.title === 'Usuários') {
+        return canAccessModule('users');
+    }
+    return true; // Dashboard sempre visível
+});
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+const footerNavItems: NavItem[] = [];
 </script>
 
 <template>
@@ -74,7 +75,7 @@ const footerNavItems: NavItem[] = [
             <NavMain :items="mainNavItems" />
 
             <!-- Dropdown: Permissões e Perfis -->
-            <SidebarMenu class="mt-2">
+            <SidebarMenu v-if="canAccessModule('permissoes') || canAccessModule('perfis')" class="mt-2">
                 <SidebarMenuItem>
                     <SidebarMenuButton as-child>
                         <div class="flex items-center gap-2">
@@ -83,14 +84,14 @@ const footerNavItems: NavItem[] = [
                         </div>
                     </SidebarMenuButton>
                     <SidebarMenuSub>
-                        <SidebarMenuSubItem>
+                        <SidebarMenuSubItem v-if="canAccessModule('permissoes')">
                             <SidebarMenuSubButton as-child>
                                 <Link :href="permissoesIndex().url">
                                     <span>Permissões</span>
                                 </Link>
                             </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
-                        <SidebarMenuSubItem>
+                        <SidebarMenuSubItem v-if="canAccessModule('perfis')">
                             <SidebarMenuSubButton as-child>
                                 <Link :href="perfisIndex().url">
                                     <span>Perfis</span>

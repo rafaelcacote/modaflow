@@ -19,7 +19,7 @@ class PermissionStoreRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('shared.permissions', 'name'),
+                Rule::unique('permissions', 'name'),
             ],
             'guard_name' => ['nullable', 'string', 'max:50'],
         ];

@@ -8,10 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import InputError from '@/components/InputError.vue';
-import { Shield } from 'lucide-vue-next';
+import { Shield, ChevronDown, ChevronRight, Key } from 'lucide-vue-next';
 import type { BreadcrumbItem } from '@/types';
+import { ref } from 'vue';
 
+interface Permission {
+    id: number;
+    name: string;
+    guard_name: string;
+}
+
+interface PermissionGroup {
+    name: string;
+    permissions: Permission[];
+}
+
+interface Props {
+    permissionsGrouped: PermissionGroup[];
+}
+
+const props = defineProps<Props>();
 const toast = useToast();
 
 const breadcrumbItems: BreadcrumbItem[] = [
@@ -22,7 +41,41 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const form = useForm({
     name: '',
     guard_name: 'web',
+    permissions: [] as number[],
 });
+
+// Estado dos módulos expandidos
+const expandedModules = ref<Record<string, boolean>>({});
+
+const toggleModule = (moduleName: string) => {
+    expandedModules.value[moduleName] = !expandedModules.value[moduleName];
+};
+
+const togglePermission = (permissionId: number) => {
+    const index = form.permissions.indexOf(permissionId);
+    if (index > -1) {
+        form.permissions.splice(index, 1);
+    } else {
+        form.permissions.push(permissionId);
+    }
+};
+
+const toggleAllPermissionsInModule = (module: PermissionGroup) => {
+    const modulePermissionIds = module.permissions.map(p => p.id);
+    const allSelected = modulePermissionIds.every(id => form.permissions.includes(id));
+    
+    if (allSelected) {
+        // Remove todas as permissões do módulo
+        form.permissions = form.permissions.filter(id => !modulePermissionIds.includes(id));
+    } else {
+        // Adiciona todas as permissões do módulo
+        modulePermissionIds.forEach(id => {
+            if (!form.permissions.includes(id)) {
+                form.permissions.push(id);
+            }
+        });
+    }
+};
 
 const handleSubmit = () => {
     form.post(RoleController.store().url, {
@@ -86,6 +139,89 @@ const handleSubmit = () => {
                             />
                             <InputError :message="form.errors.guard_name" />
                         </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Permissões Card -->
+                <Card class="border-border shadow-sm">
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            <Key class="h-5 w-5 text-primary" />
+                            Permissões do Perfil
+                        </CardTitle>
+                        <CardDescription>
+                            Selecione as permissões que este perfil terá acesso
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <div v-if="!props.permissionsGrouped || props.permissionsGrouped.length === 0" class="text-center py-8 text-muted-foreground">
+                            <Key class="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>Nenhuma permissão encontrada.</p>
+                            <p class="text-sm">Crie algumas permissões primeiro para poder atribuí-las aos perfis.</p>
+                        </div>
+                        
+                        <div v-else class="space-y-3">
+                            <div v-for="module in props.permissionsGrouped" :key="module.name" class="border rounded-lg">
+                                <Collapsible :open="expandedModules[module.name]">
+                                    <CollapsibleTrigger 
+                                        @click="toggleModule(module.name)"
+                                        class="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                                    >
+                                        <div class="flex items-center gap-3">
+                                            <Checkbox
+                                                :checked="module.permissions.every(p => form.permissions.includes(p.id))"
+                                                :indeterminate="module.permissions.some(p => form.permissions.includes(p.id)) && !module.permissions.every(p => form.permissions.includes(p.id))"
+                                                @click.stop="toggleAllPermissionsInModule(module)"
+                                            />
+                                            <span class="font-medium">{{ module.name }}</span>
+                                            <span class="text-sm text-muted-foreground">
+                                                ({{ module.permissions.length }} permissões)
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-muted-foreground">
+                                                {{ module.permissions.filter(p => form.permissions.includes(p.id)).length }}/{{ module.permissions.length }}
+                                            </span>
+                                            <ChevronDown 
+                                                v-if="expandedModules[module.name]" 
+                                                class="h-4 w-4 text-muted-foreground" 
+                                            />
+                                            <ChevronRight 
+                                                v-else 
+                                                class="h-4 w-4 text-muted-foreground" 
+                                            />
+                                        </div>
+                                    </CollapsibleTrigger>
+                                    
+                                    <CollapsibleContent class="px-4 pb-4">
+                                        <div class="grid gap-2 pl-6">
+                                            <div 
+                                                v-for="permission in module.permissions" 
+                                                :key="permission.id"
+                                                class="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted/30 transition-colors"
+                                            >
+                                                <Checkbox
+                                                    :id="`permission-${permission.id}`"
+                                                    :checked="form.permissions.includes(permission.id)"
+                                                    @update:checked="togglePermission(permission.id)"
+                                                />
+                                                <Label 
+                                                    :for="`permission-${permission.id}`" 
+                                                    class="flex-1 cursor-pointer text-sm"
+                                                >
+                                                    {{ permission.name }}
+                                                </Label>
+                                                <span class="text-xs text-muted-foreground">
+                                                    {{ permission.guard_name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </CollapsibleContent>
+                                </Collapsible>
+                            </div>
+                        </div>
+                        
+                        <InputError :message="form.errors.permissions" />
                     </CardContent>
                 </Card>
 

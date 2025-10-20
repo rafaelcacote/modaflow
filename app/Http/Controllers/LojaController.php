@@ -15,6 +15,7 @@ use Inertia\Response;
 
 class LojaController extends Controller
 {
+
     /**
      * Display a listing of lojas for a specific empresa.
      */

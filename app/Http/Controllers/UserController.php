@@ -13,14 +13,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+
     /**
      * Display a listing of users.
      */
     public function index(Request $request): Response
     {
+        $this->checkPermission('users.index', 'Você não tem permissão para visualizar usuários.');
+
         $query = User::with(['empresa', 'lojas']);
 
         // Filtro por status (ativo/inativo)
@@ -63,10 +67,14 @@ class UserController extends Controller
      */
     public function create(): Response
     {
+        $this->checkPermission('users.create', 'Você não tem permissão para criar usuários.');
+
         $empresas = Empresa::ativas()->orderBy('razao_social')->get(['id', 'razao_social']);
+        $roles = Role::orderBy('name')->get(['id', 'name']);
         
         return Inertia::render('users/Create', [
             'empresas' => $empresas,
+            'roles' => $roles,
         ]);
     }
 
@@ -75,6 +83,8 @@ class UserController extends Controller
      */
     public function store(UserStoreRequest $request): RedirectResponse
     {
+        $this->checkPermission('users.store', 'Você não tem permissão para criar usuários.');
+
         $data = $request->validated();
         
         DB::beginTransaction();
@@ -101,12 +111,21 @@ class UserController extends Controller
             $lojas = $data['lojas'] ?? [];
             unset($data['lojas']);
 
+            // Remove roles do array principal para processar separadamente
+            $roles = $data['roles'] ?? [];
+            unset($data['roles']);
+
             // Criar usuário
             $user = User::create($data);
           
             // Associar lojas se existirem
             if (!empty($lojas)) {
                 $user->lojas()->sync($lojas);
+            }
+            
+            // Associar perfis se existirem
+            if (!empty($roles)) {
+                $user->syncRoles($roles);
             }
             
             DB::commit();
@@ -128,6 +147,8 @@ class UserController extends Controller
      */
     public function show(User $user): Response
     {
+        $this->checkPermission('users.show', 'Você não tem permissão para visualizar usuários.');
+
         $user->load(['empresa', 'lojas']);
         
         return Inertia::render('users/Show', [
@@ -140,13 +161,17 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
-        $user->load(['empresa', 'lojas']);
+        $this->checkPermission('users.edit', 'Você não tem permissão para editar usuários.');
+
+        $user->load(['empresa', 'lojas', 'roles']);
         
         $empresas = Empresa::ativas()->orderBy('razao_social')->get(['id', 'razao_social']);
+        $roles = Role::orderBy('name')->get(['id', 'name']);
         
         return Inertia::render('users/Edit', [
             'user' => $user,
             'empresas' => $empresas,
+            'roles' => $roles,
         ]);
     }
 
@@ -155,6 +180,8 @@ class UserController extends Controller
      */
     public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
+        $this->checkPermission('users.update', 'Você não tem permissão para editar usuários.');
+
         $data = $request->validated();
         
         DB::beginTransaction();
@@ -185,11 +212,18 @@ class UserController extends Controller
             $lojas = $data['lojas'] ?? [];
             unset($data['lojas']);
             
+            // Remove roles do array principal para processar separadamente
+            $roles = $data['roles'] ?? [];
+            unset($data['roles']);
+            
             // Atualizar usuário
             $user->update($data);
             
             // Atualizar lojas associadas
             $user->lojas()->sync($lojas);
+            
+            // Atualizar perfis associados
+            $user->syncRoles($roles);
             
             DB::commit();
 
@@ -210,6 +244,8 @@ class UserController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
+        $this->checkPermission('users.delete', 'Você não tem permissão para excluir usuários.');
+
         // Não permitir exclusão do próprio usuário
         if ($user->id === auth()->id()) {
             return back()->withErrors(['error' => 'Você não pode excluir seu próprio usuário.']);

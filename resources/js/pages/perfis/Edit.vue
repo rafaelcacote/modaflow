@@ -1,15 +1,30 @@
 <script setup lang="ts">
 import RoleController from '@/actions/App/Http/Controllers/RoleController';
 import { index as perfisIndex } from '@/routes/perfis';
-import { Form, Head } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { useToast } from '@/composables/useToast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import InputError from '@/components/InputError.vue';
-import { Shield } from 'lucide-vue-next';
+import { Shield, ChevronDown, ChevronRight, Key } from 'lucide-vue-next';
 import type { BreadcrumbItem } from '@/types';
+import { ref } from 'vue';
+
+interface Permission {
+    id: number;
+    name: string;
+    guard_name: string;
+}
+
+interface PermissionGroup {
+    name: string;
+    permissions: Permission[];
+}
 
 interface Role { 
     id: number; 
@@ -19,12 +34,71 @@ interface Role {
     updated_at: string 
 }
 
-const props = defineProps<{ perfil: Role }>();
+interface Props {
+    perfil: Role;
+    permissionsGrouped: PermissionGroup[];
+    rolePermissions: number[];
+}
+
+const props = defineProps<Props>();
+const toast = useToast();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Perfis', href: perfisIndex().url },
     { title: `Editar ${props.perfil.name}`, href: RoleController.edit(props.perfil).url },
 ];
+
+// Estado dos módulos expandidos
+const expandedModules = ref<Record<string, boolean>>({});
+
+// Form para gerenciar as permissões
+const form = useForm({
+    name: props.perfil.name,
+    guard_name: props.perfil.guard_name,
+    permissions: [...props.rolePermissions], // Copia as permissões existentes
+});
+
+const toggleModule = (moduleName: string) => {
+    expandedModules.value[moduleName] = !expandedModules.value[moduleName];
+};
+
+const togglePermission = (permissionId: number) => {
+    const index = form.permissions.indexOf(permissionId);
+    if (index > -1) {
+        form.permissions.splice(index, 1);
+    } else {
+        form.permissions.push(permissionId);
+    }
+};
+
+const toggleAllPermissionsInModule = (module: PermissionGroup) => {
+    const modulePermissionIds = module.permissions.map(p => p.id);
+    const allSelected = modulePermissionIds.every(id => form.permissions.includes(id));
+    
+    if (allSelected) {
+        // Remove todas as permissões do módulo
+        form.permissions = form.permissions.filter(id => !modulePermissionIds.includes(id));
+    } else {
+        // Adiciona todas as permissões do módulo
+        modulePermissionIds.forEach(id => {
+            if (!form.permissions.includes(id)) {
+                form.permissions.push(id);
+            }
+        });
+    }
+};
+
+const handleSubmit = () => {
+    form.put(RoleController.update.form(props.perfil).url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Perfil atualizado com sucesso!');
+        },
+        onError: (errors) => {
+            toast.error('Erro ao atualizar perfil', 'Verifique os campos e tente novamente.');
+        },
+    });
+};
 </script>
 
 <template>
@@ -64,13 +138,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
             </Card>
 
             <!-- Form -->
-            <Form
-                v-bind="RoleController.update.form(props.perfil)"
-                enctype="multipart/form-data"
-                :options="{ preserveScroll: true }"
-                class="space-y-6"
-                v-slot="{ errors, processing, recentlySuccessful }"
-            >
+            <form @submit.prevent="handleSubmit" class="space-y-6">
                 <Card class="border-border shadow-sm">
                     <CardHeader>
                         <CardTitle>Dados do Perfil</CardTitle>
@@ -83,25 +151,106 @@ const breadcrumbItems: BreadcrumbItem[] = [
                             <Label for="name">Nome do Perfil</Label>
                             <Input
                                 id="name"
-                                name="name"
-                                :value="props.perfil.name"
+                                v-model="form.name"
                                 placeholder="Ex: Administrador, Vendedor, etc."
-                                :class="{ 'border-red-500': errors.name }"
+                                :class="{ 'border-red-500': form.errors.name }"
                             />
-                            <InputError :message="errors.name" />
+                            <InputError :message="form.errors.name" />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="guard_name">Guard</Label>
                             <Input
                                 id="guard_name"
-                                name="guard_name"
-                                :value="props.perfil.guard_name"
+                                v-model="form.guard_name"
                                 placeholder="web"
-                                :class="{ 'border-red-500': errors.guard_name }"
+                                :class="{ 'border-red-500': form.errors.guard_name }"
                             />
-                            <InputError :message="errors.guard_name" />
+                            <InputError :message="form.errors.guard_name" />
                         </div>
+                    </CardContent>
+                </Card>
+
+                <!-- Permissões Card -->
+                <Card class="border-border shadow-sm">
+                    <CardHeader>
+                        <CardTitle class="flex items-center gap-2">
+                            <Key class="h-5 w-5 text-primary" />
+                            Permissões do Perfil
+                        </CardTitle>
+                        <CardDescription>
+                            Gerencie as permissões atribuídas a este perfil
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                        <div v-if="!props.permissionsGrouped || props.permissionsGrouped.length === 0" class="text-center py-8 text-muted-foreground">
+                            <Key class="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>Nenhuma permissão encontrada.</p>
+                            <p class="text-sm">Crie algumas permissões primeiro para poder atribuí-las aos perfis.</p>
+                        </div>
+                        
+                        <div v-else class="space-y-3">
+                            <div v-for="module in props.permissionsGrouped" :key="module.name" class="border rounded-lg">
+                                <Collapsible :open="expandedModules[module.name]">
+                                    <CollapsibleTrigger 
+                                        @click="toggleModule(module.name)"
+                                        class="flex w-full items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                                    >
+                                        <div class="flex items-center gap-3">
+                                            <Checkbox
+                                                :checked="module.permissions.every(p => form.permissions.includes(p.id))"
+                                                :indeterminate="module.permissions.some(p => form.permissions.includes(p.id)) && !module.permissions.every(p => form.permissions.includes(p.id))"
+                                                @click.stop="toggleAllPermissionsInModule(module)"
+                                            />
+                                            <span class="font-medium">{{ module.name }}</span>
+                                            <span class="text-sm text-muted-foreground">
+                                                ({{ module.permissions.length }} permissões)
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-muted-foreground">
+                                                {{ module.permissions.filter(p => form.permissions.includes(p.id)).length }}/{{ module.permissions.length }}
+                                            </span>
+                                            <ChevronDown 
+                                                v-if="expandedModules[module.name]" 
+                                                class="h-4 w-4 text-muted-foreground" 
+                                            />
+                                            <ChevronRight 
+                                                v-else 
+                                                class="h-4 w-4 text-muted-foreground" 
+                                            />
+                                        </div>
+                                    </CollapsibleTrigger>
+                                    
+                                    <CollapsibleContent class="px-4 pb-4">
+                                        <div class="grid gap-2 pl-6">
+                                            <div 
+                                                v-for="permission in module.permissions" 
+                                                :key="permission.id"
+                                                class="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted/30 transition-colors"
+                                            >
+                                                <Checkbox
+                                                    :id="`permission-${permission.id}`"
+                                                    :checked="form.permissions.includes(permission.id)"
+                                                    @update:checked="togglePermission(permission.id)"
+                                                />
+                                                <Label 
+                                                    :for="`permission-${permission.id}`" 
+                                                    class="flex-1 cursor-pointer text-sm"
+                                                >
+                                                    {{ permission.name }}
+                                                </Label>
+                                                <span class="text-xs text-muted-foreground">
+                                                    {{ permission.guard_name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </CollapsibleContent>
+                                </Collapsible>
+                            </div>
+                        </div>
+                        
+                        <InputError :message="form.errors.permissions" />
                     </CardContent>
                 </Card>
 
@@ -112,20 +261,14 @@ const breadcrumbItems: BreadcrumbItem[] = [
                             <Button
                                 type="button"
                                 variant="outline"
-                                :disabled="processing"
+                                :disabled="form.processing"
                                 @click="$inertia.visit(perfisIndex().url)"
                             >
                                 Cancelar
                             </Button>
                             
-                            <Transition>
-                                <p v-show="recentlySuccessful" class="text-sm font-medium text-green-600">
-                                    ✓ Salvo com sucesso
-                                </p>
-                            </Transition>
-
-                            <Button type="submit" :disabled="processing">
-                                <span v-if="!processing">
+                            <Button type="submit" :disabled="form.processing">
+                                <span v-if="!form.processing">
                                     Salvar Alterações
                                 </span>
                                 <span v-else>
@@ -135,7 +278,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         </div>
                     </CardContent>
                 </Card>
-            </Form>
+            </form>
         </div>
     </AppLayout>
 </template>

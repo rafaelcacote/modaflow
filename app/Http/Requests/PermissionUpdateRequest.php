@@ -21,7 +21,7 @@ class PermissionUpdateRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('shared.permissions', 'name')->ignore($permissionId),
+                Rule::unique('permissions', 'name')->ignore($permissionId),
             ],
             'guard_name' => ['nullable', 'string', 'max:50'],
         ];

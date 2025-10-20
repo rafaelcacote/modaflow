@@ -15,6 +15,7 @@ use Inertia\Response;
 
 class EmpresaController extends Controller
 {
+
     /**
      * Display a listing of empresas.
      */

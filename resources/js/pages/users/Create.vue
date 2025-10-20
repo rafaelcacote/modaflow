@@ -9,8 +9,14 @@ import FormActions from '@/components/users/FormActions.vue';
 import { User as UserIcon } from 'lucide-vue-next';
 import type { BreadcrumbItem, Empresa } from '@/types';
 
+interface Role {
+    id: number;
+    name: string;
+}
+
 interface Props {
     empresas: Empresa[];
+    roles: Role[];
 }
 
 const props = defineProps<Props>();
@@ -31,6 +37,7 @@ const form = useForm({
     tipo: '',
     ativo: true,
     lojas: [] as number[],
+    roles: [] as number[],
 });
 
 const handleSubmit = () => {
@@ -73,6 +80,7 @@ const handleSubmit = () => {
                     :processing="form.processing"
                     :isCreate="true"
                     :empresas="empresas"
+                    :roles="roles"
                 />
                 
                 <FormActions 

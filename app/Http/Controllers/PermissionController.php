@@ -12,11 +12,14 @@ use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
+
     /**
      * Display a listing of permissions.
      */
     public function index(Request $request): Response
     {
+        $this->checkPermission('permissoes.index', 'Você não tem permissão para visualizar permissões.');
+
         $query = Permission::query();
 
         if ($request->filled('search')) {
@@ -37,6 +40,8 @@ class PermissionController extends Controller
      */
     public function create(): Response
     {
+        $this->checkPermission('permissoes.create', 'Você não tem permissão para criar permissões.');
+
         return Inertia::render('permissoes/Create');
     }
 
@@ -45,6 +50,8 @@ class PermissionController extends Controller
      */
     public function store(PermissionStoreRequest $request): RedirectResponse
     {
+        $this->checkPermission('permissoes.store', 'Você não tem permissão para criar permissões.');
+
         $data = $request->validated();
         Permission::create([
             'name' => $data['name'],
@@ -60,6 +67,8 @@ class PermissionController extends Controller
      */
     public function edit(Permission $permiso): Response
     {
+        $this->checkPermission('permissoes.edit', 'Você não tem permissão para editar permissões.');
+
         // Note: Route model binding with parameter name {permiso} for resource 'permissoes'
         return Inertia::render('permissoes/Edit', [
             'permissao' => $permiso,
@@ -71,6 +80,8 @@ class PermissionController extends Controller
      */
     public function update(PermissionUpdateRequest $request, Permission $permiso): RedirectResponse
     {
+        $this->checkPermission('permissoes.update', 'Você não tem permissão para editar permissões.');
+
         $data = $request->validated();
         $permiso->update([
             'name' => $data['name'],
@@ -86,6 +97,8 @@ class PermissionController extends Controller
      */
     public function destroy(Permission $permiso): RedirectResponse
     {
+        $this->checkPermission('permissoes.delete', 'Você não tem permissão para excluir permissões.');
+
         $permiso->delete();
 
         return to_route('permissoes.index')
